@@ -39,4 +39,8 @@ public class Storage {
         putEntity(entity);
     }
 
+    public void removeEntity(Entity entity) {
+        entities.remove(entity.getId());
+    }
+
 }

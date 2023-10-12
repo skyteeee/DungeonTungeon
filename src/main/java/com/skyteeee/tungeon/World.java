@@ -25,6 +25,10 @@ public class World implements GameObject {
         player.setCurrentPlace(p1);
     }
 
+    public Player getPlayer() {
+        return player;
+    }
+
     public void printState() {
         System.out.println("\n-----");
         player.getCurrentPlace().printState();

@@ -20,6 +20,16 @@ public class Path extends EntityClass {
         return Storage.getInstance().getPlace(destinationId);
     }
 
+    public Place[] unlink() {
+        Place[] unlinked = new Place[places.length];
+        Storage storage = Storage.getInstance();
+        unlinked[0] = storage.getPlace(places[0]);
+        unlinked[1] = storage.getPlace(places[1]);
+        unlinked[0].removePath(this);
+        unlinked[1].removePath(this);
+        return unlinked;
+    }
+
     public void setTitle(String title) {
         this.title = title;
     }

@@ -8,7 +8,7 @@ import com.skyteeee.tungeon.storage.Storage;
 import java.util.Random;
 
 public class EntityFactory {
-    Random rnd = new Random();
+    public Random rnd = new Random();
     static String[] colors = new String[] {
             "black",
             "white",
