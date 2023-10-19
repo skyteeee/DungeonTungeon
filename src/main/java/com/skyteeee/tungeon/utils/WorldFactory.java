@@ -78,6 +78,7 @@ public class WorldFactory {
 
 
         World world = new World();
+        world.setPlayer(factory.createPlayer());
         world.getPlayer().setCurrentPlace(first);
         return world;
     }

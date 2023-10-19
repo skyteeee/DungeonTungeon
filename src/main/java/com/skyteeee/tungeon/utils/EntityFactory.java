@@ -1,10 +1,13 @@
 package com.skyteeee.tungeon.utils;
 
+import com.skyteeee.tungeon.entities.Character;
 import com.skyteeee.tungeon.entities.Outdoors;
 import com.skyteeee.tungeon.entities.Path;
 import com.skyteeee.tungeon.entities.Place;
+import com.skyteeee.tungeon.entities.Player;
 import com.skyteeee.tungeon.storage.Storage;
 
+import javax.swing.text.PlainView;
 import java.util.Random;
 
 public class EntityFactory {
@@ -128,6 +131,12 @@ public class EntityFactory {
         String type = pathTypes[rnd.nextInt(pathTypes.length)];
         path.setTitle(color + " " + type);
         return path;
+    }
+
+    public Player createPlayer() {
+        Player player = new Player();
+        Storage.getInstance().addNewEntity(player);
+        return player;
     }
 
 

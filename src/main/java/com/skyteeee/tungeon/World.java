@@ -9,7 +9,7 @@ import com.skyteeee.tungeon.utils.GameObject;
 import java.util.Scanner;
 
 public class World implements GameObject {
-    private Player player = new Player();
+    private Player player;
     private Scanner inputScanner = new Scanner(System.in);
 
     public void createWorld() {
@@ -29,9 +29,11 @@ public class World implements GameObject {
         return player;
     }
 
+    public void setPlayer(Player player) {this.player = player;}
+
     public void printState() {
         System.out.println("\n-----");
-        player.getCurrentPlace().printState();
+        player.getCurrentPlace().printState(player);
     }
 
     private boolean processInput(int choice) {
@@ -39,6 +41,7 @@ public class World implements GameObject {
         Path path = place.getPath(choice-1);
         if (path != null) {
             Place destination = path.getDestination(place);
+            path.addVisitor(player);
             player.setCurrentPlace(destination);
             return true;
         }

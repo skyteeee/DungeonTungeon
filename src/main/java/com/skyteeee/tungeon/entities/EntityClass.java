@@ -1,6 +1,6 @@
 package com.skyteeee.tungeon.entities;
 
-public class EntityClass implements Entity {
+public abstract class EntityClass implements Entity {
     private int id;
 
     @Override
@@ -12,4 +12,7 @@ public class EntityClass implements Entity {
     public void setId(int id) {
         this.id = id;
     }
+
+
+
 }

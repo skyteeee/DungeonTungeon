@@ -53,13 +53,13 @@ public class Place extends EntityClass {
         return paths.size();
     }
 
-    public void printState() {
+    public void printState(Player player) {
         System.out.println("You are in " + description + " (" + getId() + ")");
         System.out.println("-----");
         System.out.println("You see the following paths: ");
         for (int i = 0; i < paths.size(); i ++) {
             Path path = (Path) Storage.getInstance().getEntity(paths.get(i));
-            System.out.println("" + (i+1) + ". " + path.getTitle());
+            path.printState(i+1, player, this);
         }
     }
 
