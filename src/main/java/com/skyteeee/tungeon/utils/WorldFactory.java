@@ -1,10 +1,18 @@
 package com.skyteeee.tungeon.utils;
 
 import com.skyteeee.tungeon.World;
+import com.skyteeee.tungeon.entities.Entity;
 import com.skyteeee.tungeon.entities.Path;
 import com.skyteeee.tungeon.entities.Place;
+import com.skyteeee.tungeon.entities.Player;
 import com.skyteeee.tungeon.storage.Storage;
+import org.json.JSONArray;
+import org.json.JSONObject;
 
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.*;
 
 public class WorldFactory {
@@ -16,6 +24,11 @@ public class WorldFactory {
     List<Place> nextPlaces = new LinkedList<>();
     List<Place> availPlaces = new LinkedList<>();
 
+    /**
+     * Generates a new world by using a KWG (Khramov World Generator) algorithm to make a unique random world
+     * with places and paths connecting them.
+     * @return World: world which was just generated. All the entities have already been initialized and put into Storage
+     */
     public World generate() {
 
         int newPlaceChance = 60;
@@ -107,5 +120,58 @@ public class WorldFactory {
         availPlaces.add(place);
         return place;
     }
+
+    public boolean save(World world, String fileNameString) {
+        JSONObject saveObject = new JSONObject();
+        JSONObject worldObject = new JSONObject();
+        JSONArray placesArray = new JSONArray();
+        JSONArray pathsArray = new JSONArray();
+        JSONArray playersArray = new JSONArray();
+
+        String fileName = fileNameString == null ? "fallback.json" : fileNameString;
+
+        Collection<Entity> entities = storage.getAllEntities();
+
+        for (Entity entity : entities) {
+            if (entity instanceof Place) {
+                placesArray.put(entity.serialize());
+            }
+            if (entity instanceof Path) {
+                pathsArray.put(entity.serialize());
+            }
+            if (entity instanceof Player) {
+                playersArray.put(entity.serialize());
+            }
+        }
+
+        worldObject.put("places", placesArray);
+        worldObject.put("paths", pathsArray);
+        worldObject.put("players", playersArray);
+
+        saveObject.put("world", worldObject);
+        String toSave = saveObject.toString(2);
+
+        java.nio.file.Path currentPath = Paths.get("save");
+        if (!Files.exists(currentPath)) {
+            try {
+                Files.createDirectory(currentPath);
+            } catch (IOException exception) {
+                return false;
+            }
+        }
+
+        java.nio.file.Path savePath = Paths.get("save", fileName);
+
+        try {
+            Files.writeString(savePath, toSave, StandardCharsets.UTF_8);
+        } catch (IOException exception) {
+            return false;
+        }
+
+
+        return true;
+    }
+
+
 
 }

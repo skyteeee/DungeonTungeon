@@ -4,7 +4,9 @@ import com.skyteeee.tungeon.entities.Entity;
 import com.skyteeee.tungeon.entities.Path;
 import com.skyteeee.tungeon.entities.Place;
 
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class Storage {
@@ -37,6 +39,10 @@ public class Storage {
     public void addNewEntity(Entity entity) {
         entity.setId(getNextId());
         putEntity(entity);
+    }
+
+    public Collection<Entity> getAllEntities() {
+        return entities.values();
     }
 
     public void removeEntity(Entity entity) {

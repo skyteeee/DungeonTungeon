@@ -34,6 +34,12 @@ public class Path extends EntityClass {
         return object;
     }
 
+
+    /**
+     * Deserializes from a JSONObject to load from save file
+     *
+     * @param object JSONObject containing path properties
+     */
     @Override
     public void deserialize(JSONObject object) {
         setId(object.getInt("id"));

@@ -1,6 +1,8 @@
 package com.skyteeee.tungeon.entities;
 
 import com.skyteeee.tungeon.storage.Storage;
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.LinkedList;
@@ -27,8 +29,38 @@ public class Place extends EntityClass {
         paths.add(path.getId());
     }
 
+    public void addPath(int id) {
+        paths.add(id);
+    }
+
     public Path getPath (int index) {
         return index < paths.size() && index >= 0 ? Storage.getInstance().getPath(paths.get(index)) : null;
+    }
+
+    @Override
+    public JSONObject serialize() {
+        JSONObject object = new JSONObject();
+        object.put("id", getId());
+        object.put("title", getTitle());
+        object.put("description", getDescription());
+        JSONArray pathsArray = new JSONArray();
+        for (int id : paths) {
+            pathsArray.put(id);
+        }
+        object.put("paths", pathsArray);
+        return object;
+    }
+
+    @Override
+    public void deserialize(JSONObject object) {
+        setId(object.getInt("id"));
+        setTitle(object.getString("title"));
+        setDescription(object.getString("description"));
+        JSONArray pathsArray = object.getJSONArray("paths");
+        for (int i = 0; i < pathsArray.length(); i++) {
+            addPath(pathsArray.getInt(i));
+        }
+
     }
 
     public List<Place> getDestinations() {

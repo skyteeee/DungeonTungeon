@@ -5,7 +5,9 @@ import com.skyteeee.tungeon.entities.Place;
 import com.skyteeee.tungeon.entities.Player;
 import com.skyteeee.tungeon.utils.EntityFactory;
 import com.skyteeee.tungeon.utils.GameObject;
+import com.skyteeee.tungeon.utils.WorldFactory;
 
+import java.util.Map;
 import java.util.Scanner;
 
 public class World implements GameObject {
@@ -54,6 +56,7 @@ public class World implements GameObject {
 
             try {
                 int choice = inputScanner.nextInt();
+
                 if (processInput(choice)) {
                     break;
                 }
@@ -61,12 +64,43 @@ public class World implements GameObject {
                 System.out.println("Sorry, invalid choice number.");
 
             } catch (Exception exception) {
-                inputScanner.nextLine();
-                System.out.println("Sorry, please type in a valid option.");
+                String command = inputScanner.nextLine();
+                if (!processCommand(command)) {
+                    System.out.println("Sorry, please type in a valid option.");
+                } else {
+                    break;
+                }
 
             }
         }
 
+    }
+
+    private boolean save(String fileName) {
+        WorldFactory factory = new WorldFactory();
+        return factory.save(this, fileName);
+    }
+
+    private boolean processCommand(String command) {
+        if (command.startsWith("/")) {
+            String[] parts = command.split(" ");
+            String commandCore = parts[0];
+            switch (commandCore) {
+                case "/exit" : {
+                    save(parts.length > 1 ? parts[1] : null);
+                    Main.isRunning = false;
+                }
+                break;
+
+                case "/save" : {
+                    save(parts.length > 1 ? parts[1] : null);
+                }
+                break;
+            }
+            return true;
+        }
+
+        return false;
     }
 
 }
