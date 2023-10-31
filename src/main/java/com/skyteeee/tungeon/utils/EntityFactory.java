@@ -113,7 +113,7 @@ public class EntityFactory {
 
 
     public Place createPlace () {
-        Place place = new Outdoors();
+        Place place = newPlace();
         Storage.getInstance().addNewEntity(place);
         String color = colors[rnd.nextInt(colors.length)];
         String size = sizes[rnd.nextInt(sizes.length)];
@@ -124,8 +124,12 @@ public class EntityFactory {
         return place;
     }
 
+    public Place newPlace() {
+        return new Outdoors();
+    }
+
     public Path createPath() {
-        Path path = new Path();
+        Path path = newPath();
         Storage.getInstance().addNewEntity(path);
         String color = colors[rnd.nextInt(colors.length)];
         String type = pathTypes[rnd.nextInt(pathTypes.length)];
@@ -133,10 +137,18 @@ public class EntityFactory {
         return path;
     }
 
+    public Path newPath() {
+        return new Path();
+    }
+
     public Player createPlayer() {
-        Player player = new Player();
+        Player player = newPlayer();
         Storage.getInstance().addNewEntity(player);
         return player;
+    }
+
+    public Player newPlayer() {
+        return new Player();
     }
 
 

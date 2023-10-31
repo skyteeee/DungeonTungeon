@@ -1,5 +1,6 @@
 package com.skyteeee.tungeon;
 
+import com.skyteeee.tungeon.utils.UserInterface;
 import com.skyteeee.tungeon.utils.WorldFactory;
 
 // Press Shift twice to open the Search Everywhere dialog and type `show whitespaces`,
@@ -7,18 +8,19 @@ import com.skyteeee.tungeon.utils.WorldFactory;
 public class Main {
 
     public static boolean isRunning = true;
+
     public static void main(String[] args) {
         WorldFactory worldFactory = new WorldFactory();
-        World world = worldFactory.generate();
-        System.out.println(worldFactory.save(world, "world1.json"));
-        gameLoop(world);
+        UserInterface userInterface = new UserInterface(worldFactory);
+        userInterface.initialMessage();
+        gameLoop(userInterface);
 
     }
 
-    private static void gameLoop(World world) {
+    private static void gameLoop(UserInterface userInterface) {
         while (isRunning) {
-            world.printState();
-            world.userInput();
+            userInterface.printState();
+            userInterface.userInput();
         }
 
     }

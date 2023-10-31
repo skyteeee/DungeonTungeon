@@ -1,6 +1,7 @@
 package com.skyteeee.tungeon.utils;
 
 import com.skyteeee.tungeon.World;
+import com.skyteeee.tungeon.entities.Character;
 import com.skyteeee.tungeon.entities.Entity;
 import com.skyteeee.tungeon.entities.Path;
 import com.skyteeee.tungeon.entities.Place;
@@ -16,6 +17,9 @@ import java.nio.file.Paths;
 import java.util.*;
 
 public class WorldFactory {
+
+    public static final String FALLBACK_FILE_NAME = "fallback.json";
+    public static final String SAVE_DIR = "save";
     int totalPlaces = 10;
     int maxPathsPerPlace = 3;
     EntityFactory factory = new EntityFactory();
@@ -23,6 +27,8 @@ public class WorldFactory {
     List<Place> allPlaces = new LinkedList<>();
     List<Place> nextPlaces = new LinkedList<>();
     List<Place> availPlaces = new LinkedList<>();
+
+    String loadedFrom = null;
 
     /**
      * Generates a new world by using a KWG (Khramov World Generator) algorithm to make a unique random world
@@ -33,7 +39,7 @@ public class WorldFactory {
 
         int newPlaceChance = 60;
 
-
+        storage.clear();
         Place first = createPlace();
         while (allPlaces.size() < totalPlaces) {
             Place current;
@@ -90,11 +96,16 @@ public class WorldFactory {
         }
 
 
-        World world = new World();
+        World world = newWorld();
         world.setPlayer(factory.createPlayer());
         world.getPlayer().setCurrentPlace(first);
         return world;
     }
+
+    public World newWorld() {
+        return new World();
+    }
+
 
     private void removeFromAvail(Place place) {
         availPlaces.remove(place);
@@ -128,7 +139,7 @@ public class WorldFactory {
         JSONArray pathsArray = new JSONArray();
         JSONArray playersArray = new JSONArray();
 
-        String fileName = fileNameString == null ? "fallback.json" : fileNameString;
+        String fileName = fileNameString == null ? (loadedFrom == null ? FALLBACK_FILE_NAME : loadedFrom): fileNameString;
 
         Collection<Entity> entities = storage.getAllEntities();
 
@@ -151,7 +162,7 @@ public class WorldFactory {
         saveObject.put("world", worldObject);
         String toSave = saveObject.toString(2);
 
-        java.nio.file.Path currentPath = Paths.get("save");
+        java.nio.file.Path currentPath = Paths.get(SAVE_DIR);
         if (!Files.exists(currentPath)) {
             try {
                 Files.createDirectory(currentPath);
@@ -160,7 +171,7 @@ public class WorldFactory {
             }
         }
 
-        java.nio.file.Path savePath = Paths.get("save", fileName);
+        java.nio.file.Path savePath = Paths.get(SAVE_DIR, fileName);
 
         try {
             Files.writeString(savePath, toSave, StandardCharsets.UTF_8);
@@ -168,10 +179,56 @@ public class WorldFactory {
             return false;
         }
 
-
+        System.out.println("Successfully saved to " + savePath.toAbsolutePath());
         return true;
     }
 
+    public World load(String fileNameString) {
 
+        String fileName = fileNameString == null ? FALLBACK_FILE_NAME : fileNameString;
+        java.nio.file.Path loadPath = Paths.get(SAVE_DIR, fileName);
+        String fileContents = null;
+        try {
+            fileContents = Files.readString(loadPath, StandardCharsets.UTF_8);
+        } catch (IOException exception) {
+            System.out.println("Could not load world from " + loadPath.toAbsolutePath());
+            return null;
+        }
+        storage.clear();
+
+        JSONObject bigObject = new JSONObject(fileContents);
+        JSONObject worldObject = bigObject.getJSONObject("world");
+        JSONArray placesArray = worldObject.getJSONArray("places");
+        JSONArray pathsArray = worldObject.getJSONArray("paths");
+        JSONArray playersArray = worldObject.getJSONArray("players");
+
+        for (int i = 0; i < placesArray.length(); i ++) {
+            JSONObject placeObject = placesArray.getJSONObject(i);
+            Place place = factory.newPlace();
+            place.deserialize(placeObject);
+            storage.putEntity(place);
+        }
+
+        for (int i = 0; i < pathsArray.length(); i ++) {
+            JSONObject pathObject = pathsArray.getJSONObject(i);
+            Path path = factory.newPath();
+            path.deserialize(pathObject);
+            storage.putEntity(path);
+        }
+
+        World world = newWorld();
+
+        for (int i = 0; i < playersArray.length(); i ++) {
+            JSONObject playerObject = playersArray.getJSONObject(i);
+            Player player = factory.newPlayer();
+            player.deserialize(playerObject);
+            storage.putEntity(player);
+            world.setPlayer(player);
+        }
+
+        loadedFrom = fileNameString;
+
+        return world;
+    }
 
 }

@@ -41,6 +41,11 @@ public class Storage {
         putEntity(entity);
     }
 
+    public void clear() {
+        entities = new HashMap<>();
+        nextId = 1;
+    }
+
     public Collection<Entity> getAllEntities() {
         return entities.values();
     }
