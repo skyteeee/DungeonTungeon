@@ -3,6 +3,7 @@ package com.skyteeee.tungeon.storage;
 import com.skyteeee.tungeon.entities.Entity;
 import com.skyteeee.tungeon.entities.Path;
 import com.skyteeee.tungeon.entities.Place;
+import com.skyteeee.tungeon.entities.items.Item;
 
 import java.util.Collection;
 import java.util.HashMap;
@@ -31,6 +32,8 @@ public class Storage {
     public Path getPath(int id) {return (Path) getEntity(id);}
 
     public Place getPlace(int id) {return (Place) getEntity(id);}
+
+    public Item getItem(int id) {return (Item) getEntity(id);}
 
     public int getNextId() {
         return nextId++;
