@@ -1,16 +1,12 @@
 package com.skyteeee.tungeon.entities;
 
 import com.skyteeee.tungeon.utils.GameObject;
-import org.json.JSONObject;
+import com.skyteeee.tungeon.utils.Savable;
 
-public interface Entity extends GameObject {
+public interface Entity extends GameObject, Savable {
 
     int getId ();
 
     void setId(int id);
-
-    JSONObject serialize();
-
-    void deserialize(JSONObject object);
 
 }

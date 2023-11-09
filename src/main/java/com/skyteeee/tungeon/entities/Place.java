@@ -1,5 +1,6 @@
 package com.skyteeee.tungeon.entities;
 
+import com.skyteeee.tungeon.entities.items.Item;
 import com.skyteeee.tungeon.storage.Inventory;
 import com.skyteeee.tungeon.storage.Storage;
 import org.json.JSONArray;
@@ -18,6 +19,11 @@ public class Place extends EntityClass {
 
     private final Inventory inventory = new Inventory();
 
+    public Item give(int choice) {
+        Item item = inventory.getItem(choice);
+        inventory.removeItem(item);
+        return item;
+    }
     public Inventory getInventory() {
         return inventory;
     }
@@ -54,6 +60,7 @@ public class Place extends EntityClass {
             pathsArray.put(id);
         }
         object.put("paths", pathsArray);
+        object.put("inventory", inventory.serialize());
         return object;
     }
 
@@ -66,6 +73,8 @@ public class Place extends EntityClass {
         for (int i = 0; i < pathsArray.length(); i++) {
             addPath(pathsArray.getInt(i));
         }
+
+        inventory.deserialize(object.getJSONObject("inventory"));
 
     }
 

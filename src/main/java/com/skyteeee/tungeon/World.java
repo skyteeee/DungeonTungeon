@@ -35,6 +35,10 @@ public class World implements GameObject {
         player.getCurrentPlace().printState(player);
     }
 
+    public void give(int choice) {
+        player.take(choice);
+    }
+
     public boolean processInput(int choice) {
         Place place = player.getCurrentPlace();
         Path path = place.getPath(choice-1);

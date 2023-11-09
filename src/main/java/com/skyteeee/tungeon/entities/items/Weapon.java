@@ -38,11 +38,19 @@ public class Weapon extends EntityClass implements Item{
 
     @Override
     public JSONObject serialize() {
-        return null;
+        JSONObject object = new JSONObject();
+        object.put("id", getId());
+        object.put("title", getTitle());
+        object.put("damage", getDamage());
+        object.put("dropChance", getDropChance());
+        return object;
     }
 
     @Override
     public void deserialize(JSONObject object) {
-
+        setId(object.getInt("id"));
+        setTitle(object.getString("title"));
+        setDamage(object.getInt("damage"));
+        setDropChance(object.getFloat("dropChance"));
     }
 }

@@ -11,4 +11,6 @@ public interface Character extends Entity {
 
     Inventory getInventory();
 
+    void take(int choice);
+
 }

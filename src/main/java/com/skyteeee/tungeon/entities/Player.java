@@ -21,6 +21,18 @@ public class Player extends EntityClass implements Character {
     }
 
     @Override
+    public void take(int choice) {
+        Item item = getCurrentPlace().give(choice);
+        inventory.addItem(item);
+        System.out.println("You took a " + item.getTitle());
+    }
+
+    public void printInventory() {
+        System.out.println("------- \nYou have the following items: ");
+        inventory.printState();
+    }
+
+    @Override
     public Place getCurrentPlace() {
         return (Place) Storage.getInstance().getEntity(currentPlaceId);
     }
@@ -35,6 +47,7 @@ public class Player extends EntityClass implements Character {
         JSONObject object = new JSONObject();
         object.put("id", getId());
         object.put("currentPlace", currentPlaceId);
+        object.put("inventory", inventory.serialize());
         return object;
     }
 
@@ -42,5 +55,6 @@ public class Player extends EntityClass implements Character {
     public void deserialize(JSONObject object) {
         setId(object.getInt("id"));
         setCurrentPlace(object.getInt("currentPlace"));
+        inventory.deserialize(object.getJSONObject("inventory"));
     }
 }
