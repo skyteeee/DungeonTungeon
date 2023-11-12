@@ -3,44 +3,26 @@ package com.skyteeee.tungeon.entities;
 import com.skyteeee.tungeon.entities.items.Item;
 import com.skyteeee.tungeon.storage.Inventory;
 import com.skyteeee.tungeon.storage.Storage;
-import com.skyteeee.tungeon.utils.UserInterface;
 import org.json.JSONObject;
 
-import java.util.ArrayList;
-import java.util.List;
-
-public class Player extends EntityClass implements Character {
+public class Enemy extends EntityClass implements Character{
     private int currentPlaceId;
-    private final Inventory inventory = new Inventory();
-    private int health = 1000;
-    @Override
-    public void setCurrentPlace(Place place) {
-        currentPlaceId = place.getId();
-    }
+    private Inventory inventory = new Inventory();
+    private String title;
+    private int weaponIdx = 0;
+
+    private int health = 100;
+
     @Override
     public void setCurrentPlace(int id) {
+
         currentPlaceId = id;
     }
 
     @Override
-    public void take(int choice) {
-        Item item = getCurrentPlace().give(choice);
-        inventory.addItem(item);
-        System.out.println("You took a " + item.getTitle());
-    }
-
-    @Override
-    public Item give(int choice) {
-        Item item = inventory.getItem(choice);
-        inventory.removeItem(item);
-        System.out.println("You dropped a " + item.getTitle());
-        return item;
-    }
-
-    public void printInventory() {
-        UserInterface.strike();
-        System.out.println("You have the following items: ");
-        inventory.printState(true);
+    public void setCurrentPlace(Place place) {
+        place.addEnemy(this);
+        currentPlaceId = place.getId();
     }
 
     @Override
@@ -51,6 +33,20 @@ public class Player extends EntityClass implements Character {
     @Override
     public Inventory getInventory() {
         return inventory;
+    }
+
+    @Override
+    public void take(int choice) {
+
+    }
+
+    @Override
+    public Item give(int choice) {
+        return null;
+    }
+
+    public void printState() {
+        System.out.println(title + " holding a " + inventory.getItem(weaponIdx).getTitle());
     }
 
     @Override
@@ -67,8 +63,9 @@ public class Player extends EntityClass implements Character {
     public JSONObject serialize() {
         JSONObject object = new JSONObject();
         object.put("id", getId());
-        object.put("currentPlace", currentPlaceId);
+        object.put("title", getTitle());
         object.put("inventory", inventory.serialize());
+        object.put("currentPlace", currentPlaceId);
         object.put("health", getHealth());
         return object;
     }
@@ -76,8 +73,17 @@ public class Player extends EntityClass implements Character {
     @Override
     public void deserialize(JSONObject object) {
         setId(object.getInt("id"));
+        setTitle(object.getString("title"));
         setCurrentPlace(object.getInt("currentPlace"));
         inventory.deserialize(object.getJSONObject("inventory"));
         setHealth(object.optInt("health", getHealth()));
+    }
+
+    public String getTitle() {
+        return title;
+    }
+
+    public void setTitle(String title) {
+        this.title = title;
     }
 }

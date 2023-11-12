@@ -14,6 +14,10 @@ public class UserInterface {
         worldFactory = factory;
     }
 
+    public static void strike() {
+        System.out.println("-----");
+    }
+
      public void initialMessage() {
         System.out.println("Welcome to the Dungeon Tungeon!");
         System.out.println("type '/new' for new game");
@@ -26,7 +30,7 @@ public class UserInterface {
     }
 
     public void printState() {
-        System.out.println("\n\n\n\n\n\n");
+        System.out.println("\n\n");
         currentWorld.printState();
     }
 
@@ -100,6 +104,24 @@ public class UserInterface {
                         return false;
                     }
                     currentWorld.getPlayer().printInventory();
+                }
+                break;
+
+                case "/drop" : {
+                    if (parts.length == 1) {
+                        return false;
+                    }
+                    try {
+                        currentWorld.take(Integer.parseInt(parts[1]) - 1);
+                    } catch (IndexOutOfBoundsException exception) {
+                        System.out.println("Index outside of option choices. ");
+                        return false;
+                    } catch (NumberFormatException exception) {
+                        System.out.println("Please enter a number as your choice.");
+                        return false;
+                    } catch (NullPointerException exception) {
+                        return false;
+                    }
                 }
                 break;
 

@@ -1,5 +1,6 @@
 package com.skyteeee.tungeon.storage;
 
+import com.skyteeee.tungeon.entities.Enemy;
 import com.skyteeee.tungeon.entities.Entity;
 import com.skyteeee.tungeon.entities.Path;
 import com.skyteeee.tungeon.entities.Place;
@@ -32,6 +33,10 @@ public class Storage {
     public Path getPath(int id) {return (Path) getEntity(id);}
 
     public Place getPlace(int id) {return (Place) getEntity(id);}
+
+    public Enemy getEnemy(int id) {
+        return (Enemy) getEntity(id);
+    }
 
     public Item getItem(int id) {return (Item) getEntity(id);}
 

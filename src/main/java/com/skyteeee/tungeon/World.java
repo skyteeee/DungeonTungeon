@@ -3,8 +3,10 @@ package com.skyteeee.tungeon;
 import com.skyteeee.tungeon.entities.Path;
 import com.skyteeee.tungeon.entities.Place;
 import com.skyteeee.tungeon.entities.Player;
+import com.skyteeee.tungeon.entities.items.Item;
 import com.skyteeee.tungeon.utils.EntityFactory;
 import com.skyteeee.tungeon.utils.GameObject;
+import com.skyteeee.tungeon.utils.UserInterface;
 import com.skyteeee.tungeon.utils.WorldFactory;
 
 import java.util.Map;
@@ -31,12 +33,18 @@ public class World implements GameObject {
     }
 
     public void printState() {
-        System.out.println("\n-----");
+        System.out.println();
+        UserInterface.strike();
         player.getCurrentPlace().printState(player);
     }
 
     public void give(int choice) {
         player.take(choice);
+    }
+
+    public void take(int choice) {
+        Item item = player.give(choice);
+        player.getCurrentPlace().take(item);
     }
 
     public boolean processInput(int choice) {
