@@ -1,5 +1,7 @@
 package com.skyteeee.tungeon.entities;
 
+import com.skyteeee.tungeon.entities.items.Item;
+import com.skyteeee.tungeon.storage.Inventory;
 import com.skyteeee.tungeon.storage.Storage;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -15,6 +17,16 @@ public class Place extends EntityClass {
     private String description;
     private String title;
 
+    private final Inventory inventory = new Inventory();
+
+    public Item give(int choice) {
+        Item item = inventory.getItem(choice);
+        inventory.removeItem(item);
+        return item;
+    }
+    public Inventory getInventory() {
+        return inventory;
+    }
     public void setDescription(String description) {
         this.description = description;
     }
@@ -48,6 +60,7 @@ public class Place extends EntityClass {
             pathsArray.put(id);
         }
         object.put("paths", pathsArray);
+        object.put("inventory", inventory.serialize());
         return object;
     }
 
@@ -60,6 +73,8 @@ public class Place extends EntityClass {
         for (int i = 0; i < pathsArray.length(); i++) {
             addPath(pathsArray.getInt(i));
         }
+
+        inventory.deserialize(object.getJSONObject("inventory"));
 
     }
 
@@ -88,6 +103,12 @@ public class Place extends EntityClass {
     public void printState(Player player) {
         System.out.println("You are in " + description + " (" + getId() + ")");
         System.out.println("-----");
+        if (!inventory.isEmpty()) {
+            System.out.println("You see the following items: ");
+            inventory.printState();
+            System.out.println("-----");
+        }
+
         System.out.println("You see the following paths: ");
         for (int i = 0; i < paths.size(); i ++) {
             Path path = (Path) Storage.getInstance().getEntity(paths.get(i));

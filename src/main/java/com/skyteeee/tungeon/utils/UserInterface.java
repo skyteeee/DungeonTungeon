@@ -26,6 +26,7 @@ public class UserInterface {
     }
 
     public void printState() {
+        System.out.println("\n\n\n\n\n\n");
         currentWorld.printState();
     }
 
@@ -93,6 +94,32 @@ public class UserInterface {
                 case "/load" :  {
                     return loadWorld(parts.length > 1 ? parts[1] : null);
                 }
+
+                case "/inv" : {
+                    if (currentWorld == null) {
+                        return false;
+                    }
+                    currentWorld.getPlayer().printInventory();
+                }
+                break;
+
+                case "/take" : {
+                    if (parts.length == 1) {
+                        return false;
+                    }
+                    try {
+                        currentWorld.give(Integer.parseInt(parts[1]) - 1);
+                    } catch (IndexOutOfBoundsException exception) {
+                        System.out.println("Index outside of option choices. ");
+                        return false;
+                    } catch (NumberFormatException exception) {
+                        System.out.println("Please enter a number as your choice.");
+                        return false;
+                    } catch (NullPointerException exception) {
+                        return false;
+                    }
+                }
+                break;
 
                 default: {
                     return false;

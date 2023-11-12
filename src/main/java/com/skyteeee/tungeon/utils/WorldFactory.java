@@ -6,6 +6,7 @@ import com.skyteeee.tungeon.entities.Entity;
 import com.skyteeee.tungeon.entities.Path;
 import com.skyteeee.tungeon.entities.Place;
 import com.skyteeee.tungeon.entities.Player;
+import com.skyteeee.tungeon.entities.items.Weapon;
 import com.skyteeee.tungeon.storage.Storage;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -138,6 +139,7 @@ public class WorldFactory {
         JSONArray placesArray = new JSONArray();
         JSONArray pathsArray = new JSONArray();
         JSONArray playersArray = new JSONArray();
+        JSONArray weaponsArray = new JSONArray();
 
         String fileName = fileNameString == null ? (loadedFrom == null ? FALLBACK_FILE_NAME : loadedFrom): fileNameString;
 
@@ -153,11 +155,15 @@ public class WorldFactory {
             if (entity instanceof Player) {
                 playersArray.put(entity.serialize());
             }
+            if (entity instanceof Weapon) {
+                weaponsArray.put(entity.serialize());
+            }
         }
 
         worldObject.put("places", placesArray);
         worldObject.put("paths", pathsArray);
         worldObject.put("players", playersArray);
+        worldObject.put("weapons", weaponsArray);
 
         saveObject.put("world", worldObject);
         String toSave = saveObject.toString(2);
@@ -196,11 +202,14 @@ public class WorldFactory {
         }
         storage.clear();
 
+        World world = newWorld();
+
         JSONObject bigObject = new JSONObject(fileContents);
         JSONObject worldObject = bigObject.getJSONObject("world");
         JSONArray placesArray = worldObject.getJSONArray("places");
         JSONArray pathsArray = worldObject.getJSONArray("paths");
         JSONArray playersArray = worldObject.getJSONArray("players");
+        JSONArray weaponsArray = worldObject.getJSONArray("weapons");
 
         for (int i = 0; i < placesArray.length(); i ++) {
             JSONObject placeObject = placesArray.getJSONObject(i);
@@ -216,7 +225,13 @@ public class WorldFactory {
             storage.putEntity(path);
         }
 
-        World world = newWorld();
+        for (int i = 0; i < weaponsArray.length(); i ++) {
+            JSONObject weaponsObject = weaponsArray.getJSONObject(i);
+            Weapon weapon = factory.newWeapon();
+            weapon.deserialize(weaponsObject);
+            storage.putEntity(weapon);
+        }
+
 
         for (int i = 0; i < playersArray.length(); i ++) {
             JSONObject playerObject = playersArray.getJSONObject(i);
