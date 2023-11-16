@@ -1,6 +1,7 @@
 package com.skyteeee.tungeon.entities;
 
 import com.skyteeee.tungeon.entities.items.Item;
+import com.skyteeee.tungeon.entities.items.Weapon;
 import com.skyteeee.tungeon.storage.Inventory;
 
 public interface Character extends Entity {
@@ -18,5 +19,8 @@ public interface Character extends Entity {
 
     int getHealth();
     void setHealth(int health);
+
+    void attack(Character target, Weapon weapon);
+    void defend(Character attacker, Weapon weapon);
 
 }

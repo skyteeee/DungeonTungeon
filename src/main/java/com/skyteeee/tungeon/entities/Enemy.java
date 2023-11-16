@@ -1,6 +1,7 @@
 package com.skyteeee.tungeon.entities;
 
 import com.skyteeee.tungeon.entities.items.Item;
+import com.skyteeee.tungeon.entities.items.Weapon;
 import com.skyteeee.tungeon.storage.Inventory;
 import com.skyteeee.tungeon.storage.Storage;
 import org.json.JSONObject;
@@ -47,6 +48,32 @@ public class Enemy extends EntityClass implements Character{
 
     public void printState() {
         System.out.println(title + " holding a " + inventory.getItem(weaponIdx).getTitle());
+    }
+
+    @Override
+    public void defend(Character attacker, Weapon weapon) {
+        health -= weapon.getDamage();
+        if (!checkDeath()) {
+            attack(attacker, (Weapon) inventory.getItem(weaponIdx));
+        }
+    }
+
+    @Override
+    public void attack(Character target, Weapon weapon) {
+        if (weapon == null) {
+            weapon = (Weapon) inventory.getItem(weaponIdx);
+        }
+        target.defend(this, weapon);
+    }
+
+    private boolean checkDeath() {
+        if (health <= 0) {
+            System.out.println("KILLED: " + title);
+            inventory.dropAll(getCurrentPlace());
+            getCurrentPlace().removeEnemy(this);
+            return true;
+        }
+        return false;
     }
 
     @Override

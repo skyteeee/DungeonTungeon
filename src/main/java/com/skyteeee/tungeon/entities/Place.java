@@ -63,6 +63,14 @@ public class Place extends EntityClass {
         enemies.add(id);
     }
 
+    public Enemy getEnemy(int index) {
+        return Storage.getInstance().getEnemy(enemies.get(index));
+    }
+
+    public void removeEnemy(Enemy enemy) {
+        enemies.remove(enemy.getId());
+    }
+
     @Override
     public JSONObject serialize() {
         JSONObject object = new JSONObject();
@@ -134,7 +142,9 @@ public class Place extends EntityClass {
 
         if (!enemies.isEmpty()) {
             System.out.println("YOU ENCOUNTERED THE FOLLOWING ENEMIES: ");
-            for (int id : enemies) {
+            for (int i = 0; i < enemies.size(); i++) {
+                int id = enemies.get(i);
+                System.out.print((i+1) + ". ");
                 storage.getEnemy(id).printState();
             }
             UserInterface.strike();

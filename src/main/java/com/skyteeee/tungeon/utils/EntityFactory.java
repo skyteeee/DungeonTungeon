@@ -9,7 +9,7 @@ import javax.swing.text.PlainView;
 import java.util.Random;
 
 public class EntityFactory {
-    public Random rnd = new Random();
+    public static Random rnd = new Random();
     static String[] colors = new String[] {
             "black",
             "white",

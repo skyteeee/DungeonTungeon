@@ -1,6 +1,7 @@
 package com.skyteeee.tungeon.entities;
 
 import com.skyteeee.tungeon.entities.items.Item;
+import com.skyteeee.tungeon.entities.items.Weapon;
 import com.skyteeee.tungeon.storage.Inventory;
 import com.skyteeee.tungeon.storage.Storage;
 import com.skyteeee.tungeon.utils.UserInterface;
@@ -41,6 +42,48 @@ public class Player extends EntityClass implements Character {
         UserInterface.strike();
         System.out.println("You have the following items: ");
         inventory.printState(true);
+    }
+
+    public void attack(int enemyIdx, UserInterface ui) {
+        Enemy enemy = getCurrentPlace().getEnemy(enemyIdx);
+        if (inventory.isEmpty()) {
+            System.out.println("As you leap towards the enemy, you realize that you lack any weapons. It is too late to turn away now. ");
+            enemy.attack(this, null);
+        } else {
+            System.out.println("You have the following items: ");
+            inventory.printState(true);
+            int weaponIdx = ui.inputChoice("Which weapon would you like to use? ", inventory.size()) - 1;
+            Weapon weapon = (Weapon) inventory.getItem(weaponIdx);
+            attack(enemy, weapon);
+        }
+    }
+
+    @Override
+    public void attack(Character target, Weapon weapon) {
+        target.defend(this, weapon);
+    }
+
+    @Override
+    public void defend(Character attacker, Weapon weapon) {
+        health -= weapon.getDamage();
+        checkDeath();
+    }
+
+    private void checkDeath() {
+        if (health <= 0) {
+            UserInterface.slowPrint("Wait", 100);
+            for (int i = 0; i < 3; i++) {
+                UserInterface.sleep(400);
+                System.out.print(".");
+            }
+            System.out.println();
+            UserInterface.sleep(1000);
+            System.out.println("Why is it so cold and dark here?");
+            UserInterface.sleep(1000);
+            System.out.println("YOU DIED. HOW PITIFUL...");
+
+            inventory.dropAll(getCurrentPlace());
+        }
     }
 
     @Override

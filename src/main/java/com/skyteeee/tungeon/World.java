@@ -7,10 +7,6 @@ import com.skyteeee.tungeon.entities.items.Item;
 import com.skyteeee.tungeon.utils.EntityFactory;
 import com.skyteeee.tungeon.utils.GameObject;
 import com.skyteeee.tungeon.utils.UserInterface;
-import com.skyteeee.tungeon.utils.WorldFactory;
-
-import java.util.Map;
-import java.util.Scanner;
 
 public class World implements GameObject {
     private Player player;
@@ -47,7 +43,11 @@ public class World implements GameObject {
         player.getCurrentPlace().take(item);
     }
 
-    public boolean processInput(int choice) {
+    public void attack(int enemyIdx, UserInterface ui) {
+        player.attack(enemyIdx, ui);
+    }
+
+    public boolean move(int choice) {
         Place place = player.getCurrentPlace();
         Path path = place.getPath(choice-1);
         if (path != null) {

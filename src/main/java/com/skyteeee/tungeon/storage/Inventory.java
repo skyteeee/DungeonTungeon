@@ -1,5 +1,6 @@
 package com.skyteeee.tungeon.storage;
 
+import com.skyteeee.tungeon.entities.Place;
 import com.skyteeee.tungeon.entities.items.Item;
 import com.skyteeee.tungeon.entities.items.Weapon;
 import com.skyteeee.tungeon.utils.Savable;
@@ -37,6 +38,10 @@ public class Inventory implements Savable {
         return inventory.isEmpty();
     }
 
+    public int size() {
+        return inventory.size();
+    }
+
     public void printState(boolean detailed) {
         Storage storage = Storage.getInstance();
         for(int i = 0; i < inventory.size(); i++) {
@@ -49,6 +54,15 @@ public class Inventory implements Savable {
                 }
             } else System.out.println();
         }
+    }
+
+    public void dropAll(Place place) {
+        Storage storage = Storage.getInstance();
+        for(int i = 0; i < inventory.size(); i++) {
+            Item item = storage.getItem(inventory.get(i));
+            item.drop(place);
+        }
+        inventory.clear();
     }
 
 

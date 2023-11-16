@@ -14,23 +14,25 @@ public class UserInterface {
         worldFactory = factory;
     }
 
+    private static final String INVALID_OPTION_MESSAGE = "Sorry, please type in a valid option.";
+
     public static void strike() {
         System.out.println("-----");
     }
 
      public void initialMessage() {
-        System.out.println("Welcome to the Dungeon Tungeon!");
-        System.out.println("type '/new' for new game");
-        System.out.println("type '/load [file name]' to load old save");
-        System.out.println("type '/exit' to quit");
-        System.out.println("at any point, type '/help' for a list of commands");
+        slowPrint("Welcome to the Dungeon Tungeon!\n", 40);
+        slowPrint("type '/new' for new game\n", 40);
+        slowPrint("type '/load [file name]' to load old save\n", 40);
+        slowPrint("type '/exit' to quit\n", 40);
+        slowPrint("at any point, type '/help' for a list of commands\n", 40);
 
 
         userInput("");
     }
 
     public void printState() {
-        System.out.println("\n\n");
+        UserInterface.slowPrint("\n\n\n", 250);
         currentWorld.printState();
     }
 
@@ -49,12 +51,12 @@ public class UserInterface {
                     break;
                 }
 
-                System.out.println("Sorry, please type in a valid option.");
+                System.out.println(INVALID_OPTION_MESSAGE);
 
             } catch (Exception exception) {
                 String command = inputScanner.nextLine();
                 if (!processCommand(command)) {
-                    System.out.println("Sorry, please type in a valid option.");
+                    System.out.println(INVALID_OPTION_MESSAGE);
                 } else {
                     break;
                 }
@@ -64,15 +66,48 @@ public class UserInterface {
 
     }
 
+    public int inputChoice(String prompt, int bound) {
+        while (true) {
+            System.out.print(prompt + "> ");
+
+            try {
+                int choice = inputScanner.nextInt();
+                if (choice <= bound && choice > 0) {
+                    return choice;
+                }
+                System.out.println(INVALID_OPTION_MESSAGE);
+            } catch (Exception exception) {
+                inputScanner.nextLine();
+                System.out.println(INVALID_OPTION_MESSAGE);
+            }
+        }
+    }
+
     private boolean processInput(int choice) {
         if (currentWorld == null) {
             return false;
         }
-        return currentWorld.processInput(choice);
+        return currentWorld.move(choice);
     }
 
     private boolean save(String fileName) {
         return currentWorld != null && worldFactory.save(currentWorld, fileName);
+    }
+
+    public static void sleep(long millis) {
+        try {
+            Thread.sleep(millis);
+        } catch (Exception ignored) {
+
+        }
+    }
+
+    public static void slowPrint(String message, long delay) {
+        char[] chars = message.toCharArray();
+        for (char c : chars) {
+            System.out.print(c);
+            sleep(delay);
+        }
     }
 
     private boolean processCommand(String command) {
@@ -140,6 +175,12 @@ public class UserInterface {
                     } catch (NullPointerException exception) {
                         return false;
                     }
+                }
+                break;
+
+                case "/attack" : {
+                    int choice = parts.length == 1 ? 1 : Integer.parseInt(parts[1]);
+                    currentWorld.attack(choice - 1, this);
                 }
                 break;
 
