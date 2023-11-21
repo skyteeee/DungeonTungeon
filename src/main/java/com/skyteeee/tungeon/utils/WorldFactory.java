@@ -1,11 +1,8 @@
 package com.skyteeee.tungeon.utils;
 
 import com.skyteeee.tungeon.World;
+import com.skyteeee.tungeon.entities.*;
 import com.skyteeee.tungeon.entities.Character;
-import com.skyteeee.tungeon.entities.Entity;
-import com.skyteeee.tungeon.entities.Path;
-import com.skyteeee.tungeon.entities.Place;
-import com.skyteeee.tungeon.entities.Player;
 import com.skyteeee.tungeon.entities.items.Weapon;
 import com.skyteeee.tungeon.storage.Storage;
 import org.json.JSONArray;
@@ -21,8 +18,11 @@ public class WorldFactory {
 
     public static final String FALLBACK_FILE_NAME = "fallback.json";
     public static final String SAVE_DIR = "save";
-    int totalPlaces = 10;
-    int maxPathsPerPlace = 3;
+    /**
+     * total amount of places in a world
+     */
+    int totalPlaces = 100;
+    int maxPathsPerPlace = 4;
     EntityFactory factory = new EntityFactory();
     Storage storage = Storage.getInstance();
     List<Place> allPlaces = new LinkedList<>();
@@ -38,7 +38,7 @@ public class WorldFactory {
      */
     public World generate() {
 
-        int newPlaceChance = 60;
+        int newPlaceChance = 70;
 
         storage.clear();
         Place first = createPlace();
@@ -98,6 +98,7 @@ public class WorldFactory {
 
 
         World world = newWorld();
+        world.setSpawn(first);
         world.setPlayer(factory.createPlayer());
         world.getPlayer().setCurrentPlace(first);
         return world;
@@ -135,11 +136,12 @@ public class WorldFactory {
 
     public boolean save(World world, String fileNameString) {
         JSONObject saveObject = new JSONObject();
-        JSONObject worldObject = new JSONObject();
+        JSONObject worldObject = world.serialize();
         JSONArray placesArray = new JSONArray();
         JSONArray pathsArray = new JSONArray();
         JSONArray playersArray = new JSONArray();
         JSONArray weaponsArray = new JSONArray();
+        JSONArray enemiesArray = new JSONArray();
 
         String fileName = fileNameString == null ? (loadedFrom == null ? FALLBACK_FILE_NAME : loadedFrom): fileNameString;
 
@@ -158,12 +160,16 @@ public class WorldFactory {
             if (entity instanceof Weapon) {
                 weaponsArray.put(entity.serialize());
             }
+            if (entity instanceof Enemy) {
+                enemiesArray.put(entity.serialize());
+            }
         }
 
         worldObject.put("places", placesArray);
         worldObject.put("paths", pathsArray);
         worldObject.put("players", playersArray);
         worldObject.put("weapons", weaponsArray);
+        worldObject.put("enemies", enemiesArray);
 
         saveObject.put("world", worldObject);
         String toSave = saveObject.toString(2);
@@ -210,6 +216,14 @@ public class WorldFactory {
         JSONArray pathsArray = worldObject.getJSONArray("paths");
         JSONArray playersArray = worldObject.getJSONArray("players");
         JSONArray weaponsArray = worldObject.getJSONArray("weapons");
+        JSONArray enemiesArray = worldObject.optJSONArray("enemies", new JSONArray());
+
+        for (int i = 0; i < enemiesArray.length(); i++) {
+            JSONObject enemyObject = enemiesArray.getJSONObject(i);
+            Enemy enemy = factory.newEnemy();
+            enemy.deserialize(enemyObject);
+            storage.putEntity(enemy);
+        }
 
         for (int i = 0; i < placesArray.length(); i ++) {
             JSONObject placeObject = placesArray.getJSONObject(i);
@@ -240,6 +254,8 @@ public class WorldFactory {
             storage.putEntity(player);
             world.setPlayer(player);
         }
+
+        world.deserialize(worldObject);
 
         loadedFrom = fileNameString;
 

@@ -1,6 +1,9 @@
 package com.skyteeee.tungeon.entities.items;
 
 import com.skyteeee.tungeon.entities.EntityClass;
+import com.skyteeee.tungeon.entities.Place;
+import com.skyteeee.tungeon.entities.Player;
+import com.skyteeee.tungeon.utils.EntityFactory;
 import org.json.JSONObject;
 
 public class Weapon extends EntityClass implements Item{
@@ -34,6 +37,13 @@ public class Weapon extends EntityClass implements Item{
     @Override
     public float getDropChance() {
         return dropChance;
+    }
+
+    @Override
+    public void drop(Place place) {
+        if (EntityFactory.rnd.nextFloat() < getDropChance()) {
+            place.take(this);
+        }
     }
 
     @Override

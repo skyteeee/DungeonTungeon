@@ -1,10 +1,7 @@
 package com.skyteeee.tungeon.utils;
 
+import com.skyteeee.tungeon.entities.*;
 import com.skyteeee.tungeon.entities.Character;
-import com.skyteeee.tungeon.entities.Outdoors;
-import com.skyteeee.tungeon.entities.Path;
-import com.skyteeee.tungeon.entities.Place;
-import com.skyteeee.tungeon.entities.Player;
 import com.skyteeee.tungeon.entities.items.Weapon;
 import com.skyteeee.tungeon.storage.Storage;
 
@@ -12,7 +9,7 @@ import javax.swing.text.PlainView;
 import java.util.Random;
 
 public class EntityFactory {
-    public Random rnd = new Random();
+    public static Random rnd = new Random();
     static String[] colors = new String[] {
             "black",
             "white",
@@ -133,6 +130,42 @@ public class EntityFactory {
             "banana"
     };
 
+    static String[] enemyDescriptors = new String[] {
+            "grumpy",
+            "sad",
+            "furious",
+            "joyful",
+            "dumb",
+            "tired",
+            "dull",
+            "hyper",
+            "stormy",
+            "sly",
+            "crazy",
+            "scary",
+            "spooky",
+            "tired of life"
+    };
+
+    static String[] enemyNames = new String[] {
+            "ogre",
+            "elf",
+            "dwarf",
+            "gnome",
+            "worm",
+            "rabbit",
+            "tree",
+            "dragon",
+            "golem",
+            "light entity",
+            "ghost",
+            "bear",
+            "rat",
+            "ancient wizard advisor",
+            "wizard",
+            "the one who must not be named"
+    };
+
     static class WeaponAbility {
         String description;
         static final int MAX_DAMAGE = 100000;
@@ -164,6 +197,9 @@ public class EntityFactory {
 
     private Storage storage = Storage.getInstance();
 
+    private static final int WEAPON_CHANCE = 50;
+    private static final int ENEMY_CHANCE = 80;
+
     public Weapon createWeapon() {
         Weapon weapon = newWeapon();
         storage.addNewEntity(weapon);
@@ -190,14 +226,33 @@ public class EntityFactory {
         String descriptor = descriptors[rnd.nextInt(descriptors.length)];
         place.setDescription(size + " " + descriptor + " " + color + " " + terrain);
         place.setTitle(descriptor + " " + terrain);
-        if (rnd.nextInt(100) < 50) {
+        if (rnd.nextInt(100) < WEAPON_CHANCE) {
             place.getInventory().addItem(createWeapon());
         }
+
+        if (rnd.nextInt(100) < ENEMY_CHANCE) {
+            Enemy enemy = createEnemy();
+            enemy.setCurrentPlace(place);
+        }
+
         return place;
     }
 
     public Place newPlace() {
         return new Outdoors();
+    }
+
+    public Enemy createEnemy() {
+        Enemy enemy = newEnemy();
+        storage.addNewEntity(enemy);
+        enemy.setTitle(enemyDescriptors[rnd.nextInt(enemyDescriptors.length)] + " " + enemyNames[rnd.nextInt(enemyNames.length)]);
+        enemy.getInventory().addItem(createWeapon());
+
+        return enemy;
+    }
+
+    public Enemy newEnemy() {
+        return new Enemy();
     }
 
     public Path createPath() {

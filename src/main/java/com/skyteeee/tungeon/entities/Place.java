@@ -3,6 +3,7 @@ package com.skyteeee.tungeon.entities;
 import com.skyteeee.tungeon.entities.items.Item;
 import com.skyteeee.tungeon.storage.Inventory;
 import com.skyteeee.tungeon.storage.Storage;
+import com.skyteeee.tungeon.utils.UserInterface;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -13,6 +14,7 @@ import java.util.List;
 public class Place extends EntityClass {
 
     private List<Integer> paths = new ArrayList<>();
+    private List<Integer> enemies = new ArrayList<>();
 
     private String description;
     private String title;
@@ -23,6 +25,10 @@ public class Place extends EntityClass {
         Item item = inventory.getItem(choice);
         inventory.removeItem(item);
         return item;
+    }
+
+    public void take(Item item) {
+        inventory.addItem(item);
     }
     public Inventory getInventory() {
         return inventory;
@@ -49,12 +55,33 @@ public class Place extends EntityClass {
         return index < paths.size() && index >= 0 ? Storage.getInstance().getPath(paths.get(index)) : null;
     }
 
+    public void addEnemy(Enemy enemy) {
+        enemies.add(enemy.getId());
+    }
+
+    public void addEnemy(int id) {
+        enemies.add(id);
+    }
+
+    public Enemy getEnemy(int index) {
+        return Storage.getInstance().getEnemy(enemies.get(index));
+    }
+
+    public void removeEnemy(Enemy enemy) {
+        enemies.remove((Integer) enemy.getId());
+    }
+
     @Override
     public JSONObject serialize() {
         JSONObject object = new JSONObject();
         object.put("id", getId());
         object.put("title", getTitle());
         object.put("description", getDescription());
+        JSONArray enemiesArray = new JSONArray();
+        for (int id : enemies) {
+            enemiesArray.put(id);
+        }
+        object.put("enemies", enemiesArray);
         JSONArray pathsArray = new JSONArray();
         for (int id : paths) {
             pathsArray.put(id);
@@ -73,7 +100,10 @@ public class Place extends EntityClass {
         for (int i = 0; i < pathsArray.length(); i++) {
             addPath(pathsArray.getInt(i));
         }
-
+        JSONArray enemiesArray = object.optJSONArray("enemies", new JSONArray());
+        for (int i = 0; i < enemiesArray.length(); i++) {
+            addEnemy(enemiesArray.getInt(i));
+        }
         inventory.deserialize(object.getJSONObject("inventory"));
 
     }
@@ -101,17 +131,28 @@ public class Place extends EntityClass {
     }
 
     public void printState(Player player) {
+        Storage storage = Storage.getInstance();
         System.out.println("You are in " + description + " (" + getId() + ")");
-        System.out.println("-----");
+        UserInterface.strike();
         if (!inventory.isEmpty()) {
             System.out.println("You see the following items: ");
-            inventory.printState();
-            System.out.println("-----");
+            inventory.printState(false);
+            UserInterface.strike();
+        }
+
+        if (!enemies.isEmpty()) {
+            System.out.println("YOU ENCOUNTERED THE FOLLOWING ENEMIES: ");
+            for (int i = 0; i < enemies.size(); i++) {
+                int id = enemies.get(i);
+                System.out.print((i+1) + ". ");
+                storage.getEnemy(id).printState();
+            }
+            UserInterface.strike();
         }
 
         System.out.println("You see the following paths: ");
         for (int i = 0; i < paths.size(); i ++) {
-            Path path = (Path) Storage.getInstance().getEntity(paths.get(i));
+            Path path = (Path) storage.getEntity(paths.get(i));
             path.printState(i+1, player, this);
         }
     }

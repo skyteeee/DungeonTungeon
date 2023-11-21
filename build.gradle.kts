@@ -1,4 +1,5 @@
 plugins {
+    application
     id("java")
 }
 
@@ -17,4 +18,8 @@ dependencies {
 
 tasks.test {
     useJUnitPlatform()
+}
+
+application {
+    mainClass = "com.skyteeee.tungeon.Main"
 }
