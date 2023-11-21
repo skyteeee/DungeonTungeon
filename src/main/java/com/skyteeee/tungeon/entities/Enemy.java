@@ -4,6 +4,7 @@ import com.skyteeee.tungeon.entities.items.Item;
 import com.skyteeee.tungeon.entities.items.Weapon;
 import com.skyteeee.tungeon.storage.Inventory;
 import com.skyteeee.tungeon.storage.Storage;
+import com.skyteeee.tungeon.utils.UserInterface;
 import org.json.JSONObject;
 
 public class Enemy extends EntityClass implements Character{
@@ -52,8 +53,11 @@ public class Enemy extends EntityClass implements Character{
 
     @Override
     public void defend(Character attacker, Weapon weapon) {
-        health -= weapon.getDamage();
+        int damage = weapon.getDamage();
+        health -= damage;
+        UserInterface.slowPrint("Dealt " + damage + " damage. ");
         if (!checkDeath()) {
+            UserInterface.slowPrint(getTitle() + " has survived your attack. It has " + health + " health remaining. \n");
             attack(attacker, (Weapon) inventory.getItem(weaponIdx));
         }
     }
@@ -63,6 +67,7 @@ public class Enemy extends EntityClass implements Character{
         if (weapon == null) {
             weapon = (Weapon) inventory.getItem(weaponIdx);
         }
+        UserInterface.slowPrint(getTitle() + " attacks " + target.getTitle() + " with " + weapon.getTitle() + ". \n");
         target.defend(this, weapon);
     }
 

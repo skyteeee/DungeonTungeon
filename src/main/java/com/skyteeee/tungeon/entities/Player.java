@@ -14,6 +14,7 @@ public class Player extends EntityClass implements Character {
     private int currentPlaceId;
     private final Inventory inventory = new Inventory();
     private int health = 1000;
+    private String title = "Player 1";
     @Override
     public void setCurrentPlace(Place place) {
         currentPlaceId = place.getId();
@@ -38,10 +39,24 @@ public class Player extends EntityClass implements Character {
         return item;
     }
 
+    public boolean isDead() {
+        return health <= 0;
+    }
+
     public void printInventory() {
         UserInterface.strike();
         System.out.println("You have the following items: ");
         inventory.printState(true);
+    }
+
+    @Override
+    public void setTitle(String title) {
+        this.title = title;
+    }
+
+    @Override
+    public String getTitle() {
+        return title;
     }
 
     public void attack(int enemyIdx, UserInterface ui) {
@@ -60,16 +75,20 @@ public class Player extends EntityClass implements Character {
 
     @Override
     public void attack(Character target, Weapon weapon) {
+        UserInterface.slowPrint("Attacking " + target.getTitle() + "\n");
         target.defend(this, weapon);
     }
 
     @Override
     public void defend(Character attacker, Weapon weapon) {
         health -= weapon.getDamage();
-        checkDeath();
+        if (!checkDeath()) {
+            UserInterface.slowPrint("You stood your ground and survived the vicious attack. \n" +
+                    "You have " + getHealth() + " health remaining.\n");
+        }
     }
 
-    private void checkDeath() {
+    private boolean checkDeath() {
         if (health <= 0) {
             UserInterface.slowPrint("Wait", 100);
             for (int i = 0; i < 3; i++) {
@@ -83,7 +102,10 @@ public class Player extends EntityClass implements Character {
             System.out.println("YOU DIED. HOW PITIFUL...");
 
             inventory.dropAll(getCurrentPlace());
+
+            return true;
         }
+        return false;
     }
 
     @Override
@@ -104,6 +126,10 @@ public class Player extends EntityClass implements Character {
     @Override
     public void setHealth(int health) {
         this.health = health;
+    }
+
+    public void printState() {
+        UserInterface.slowPrint(getTitle() + " | health : " + health + "\n");
     }
 
     @Override

@@ -102,6 +102,10 @@ public class UserInterface {
         }
     }
 
+    public static void slowPrint(String message) {
+        slowPrint(message, 40);
+    }
+
     public static void slowPrint(String message, long delay) {
         char[] chars = message.toCharArray();
         for (char c : chars) {
@@ -114,79 +118,80 @@ public class UserInterface {
         if (command.startsWith("/")) {
             String[] parts = command.split(" ");
             String commandCore = parts[0];
-            switch (commandCore) {
-                case "/exit" : {
-                    save(WorldFactory.FALLBACK_FILE_NAME);
-                    Main.isRunning = false;
-                }
-                break;
+            try {
 
-                case "/save" : {
-                    return save(parts.length > 1 ? parts[1] : null);
-                }
 
-                case "/new" : {
-                    newWorld();
-                }
-                break;
-
-                case "/load" :  {
-                    return loadWorld(parts.length > 1 ? parts[1] : null);
-                }
-
-                case "/inv" : {
-                    if (currentWorld == null) {
-                        return false;
+                switch (commandCore) {
+                    case "/exit": {
+                        save(WorldFactory.FALLBACK_FILE_NAME);
+                        Main.isRunning = false;
                     }
-                    currentWorld.getPlayer().printInventory();
-                }
-                break;
+                    break;
 
-                case "/drop" : {
-                    if (parts.length == 1) {
-                        return false;
+                    case "/save": {
+                        return save(parts.length > 1 ? parts[1] : null);
                     }
-                    try {
+
+                    case "/new": {
+                        newWorld();
+                    }
+                    break;
+
+                    case "/load": {
+                        return loadWorld(parts.length > 1 ? parts[1] : null);
+                    }
+
+                    case "/inv": {
+                        if (currentWorld == null) {
+                            return false;
+                        }
+                        currentWorld.getPlayer().printInventory();
+                    }
+                    break;
+
+                    case "/drop": {
+                        if (parts.length == 1) {
+                            return false;
+                        }
+
                         currentWorld.take(Integer.parseInt(parts[1]) - 1);
-                    } catch (IndexOutOfBoundsException exception) {
-                        System.out.println("Index outside of option choices. ");
-                        return false;
-                    } catch (NumberFormatException exception) {
-                        System.out.println("Please enter a number as your choice.");
-                        return false;
-                    } catch (NullPointerException exception) {
-                        return false;
-                    }
-                }
-                break;
 
-                case "/take" : {
-                    if (parts.length == 1) {
-                        return false;
                     }
-                    try {
+                    break;
+
+                    case "/take": {
+                        if (parts.length == 1) {
+                            return false;
+                        }
+
                         currentWorld.give(Integer.parseInt(parts[1]) - 1);
-                    } catch (IndexOutOfBoundsException exception) {
-                        System.out.println("Index outside of option choices. ");
-                        return false;
-                    } catch (NumberFormatException exception) {
-                        System.out.println("Please enter a number as your choice.");
-                        return false;
-                    } catch (NullPointerException exception) {
+
+                    }
+                    break;
+
+                    case "/attack": {
+                        int choice = parts.length == 1 ? 1 : Integer.parseInt(parts[1]);
+                        currentWorld.attack(choice - 1, this);
+                    }
+                    break;
+
+                    case "/status": {
+                        currentWorld.getPlayer().printState();
+                    }
+                    break;
+
+                    default: {
                         return false;
                     }
                 }
-                break;
-
-                case "/attack" : {
-                    int choice = parts.length == 1 ? 1 : Integer.parseInt(parts[1]);
-                    currentWorld.attack(choice - 1, this);
-                }
-                break;
-
-                default: {
-                    return false;
-                }
+            }  catch (IndexOutOfBoundsException exception) {
+                System.out.println("Index outside of option choices. ");
+                return false;
+            } catch (NumberFormatException exception) {
+                System.out.println("Please enter a number as your choice.");
+                return false;
+            } catch (NullPointerException exception) {
+                return false;
             }
             return true;
         }

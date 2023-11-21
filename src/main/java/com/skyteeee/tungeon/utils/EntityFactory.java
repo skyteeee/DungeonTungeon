@@ -197,7 +197,7 @@ public class EntityFactory {
 
     private Storage storage = Storage.getInstance();
 
-    private static final int WEAPON_CHANCE = 10;
+    private static final int WEAPON_CHANCE = 50;
     private static final int ENEMY_CHANCE = 80;
 
     public Weapon createWeapon() {

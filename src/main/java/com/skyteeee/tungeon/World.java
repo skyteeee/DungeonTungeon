@@ -4,28 +4,31 @@ import com.skyteeee.tungeon.entities.Path;
 import com.skyteeee.tungeon.entities.Place;
 import com.skyteeee.tungeon.entities.Player;
 import com.skyteeee.tungeon.entities.items.Item;
+import com.skyteeee.tungeon.storage.Storage;
 import com.skyteeee.tungeon.utils.EntityFactory;
 import com.skyteeee.tungeon.utils.GameObject;
+import com.skyteeee.tungeon.utils.Savable;
 import com.skyteeee.tungeon.utils.UserInterface;
+import org.json.JSONObject;
 
-public class World implements GameObject {
+public class World implements GameObject, Savable {
     private Player player;
-
-    public void createWorld() {
-        EntityFactory factory = new EntityFactory();
-        Place p1 = factory.createPlace();
-        Place p2 = factory.createPlace();
-        Path path1 = factory.createPath();
-        path1.setPlaces(p1,p2);
-        Place p3 = factory.createPlace();
-        Path path2 = factory.createPath();
-        path2.setPlaces(p1, p3);
-
-        player.setCurrentPlace(p1);
-    }
-
+    private int spawnId;
     public Player getPlayer() {
         return player;
+    }
+
+
+    public void setSpawn(int id) {
+        spawnId = id;
+    }
+
+    public void setSpawn(Place place) {
+        setSpawn(place.getId());
+    }
+
+    public Place getSpawn() {
+        return Storage.getInstance().getPlace(spawnId);
     }
 
     public void printState() {
@@ -45,6 +48,9 @@ public class World implements GameObject {
 
     public void attack(int enemyIdx, UserInterface ui) {
         player.attack(enemyIdx, ui);
+        if (player.isDead()) {
+            player.setCurrentPlace(spawnId);
+        }
     }
 
     public boolean move(int choice) {
@@ -60,4 +66,22 @@ public class World implements GameObject {
     }
 
     public void setPlayer(Player player) {this.player = player;}
+
+
+    @Override
+    public JSONObject serialize() {
+        JSONObject object = new JSONObject();
+        object.put("spawn", spawnId);
+        object.put("player", player.getId());
+        return object;
+    }
+
+    @Override
+    public void deserialize(JSONObject object) {
+        setSpawn(object.getInt("spawn"));
+        int playerId = object.optInt("player", 0);
+        if (playerId != 0) {
+            setPlayer((Player) Storage.getInstance().getEntity(playerId));
+        }
+    }
 }

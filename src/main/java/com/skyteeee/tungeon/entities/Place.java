@@ -68,7 +68,7 @@ public class Place extends EntityClass {
     }
 
     public void removeEnemy(Enemy enemy) {
-        enemies.remove(enemy.getId());
+        enemies.remove((Integer) enemy.getId());
     }
 
     @Override

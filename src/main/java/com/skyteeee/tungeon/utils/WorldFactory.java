@@ -21,8 +21,8 @@ public class WorldFactory {
     /**
      * total amount of places in a world
      */
-    int totalPlaces = 10;
-    int maxPathsPerPlace = 3;
+    int totalPlaces = 100;
+    int maxPathsPerPlace = 4;
     EntityFactory factory = new EntityFactory();
     Storage storage = Storage.getInstance();
     List<Place> allPlaces = new LinkedList<>();
@@ -38,7 +38,7 @@ public class WorldFactory {
      */
     public World generate() {
 
-        int newPlaceChance = 60;
+        int newPlaceChance = 70;
 
         storage.clear();
         Place first = createPlace();
@@ -98,6 +98,7 @@ public class WorldFactory {
 
 
         World world = newWorld();
+        world.setSpawn(first);
         world.setPlayer(factory.createPlayer());
         world.getPlayer().setCurrentPlace(first);
         return world;
@@ -135,7 +136,7 @@ public class WorldFactory {
 
     public boolean save(World world, String fileNameString) {
         JSONObject saveObject = new JSONObject();
-        JSONObject worldObject = new JSONObject();
+        JSONObject worldObject = world.serialize();
         JSONArray placesArray = new JSONArray();
         JSONArray pathsArray = new JSONArray();
         JSONArray playersArray = new JSONArray();
@@ -253,6 +254,8 @@ public class WorldFactory {
             storage.putEntity(player);
             world.setPlayer(player);
         }
+
+        world.deserialize(worldObject);
 
         loadedFrom = fileNameString;
 
