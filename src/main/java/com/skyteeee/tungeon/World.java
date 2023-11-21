@@ -49,7 +49,7 @@ public class World implements GameObject, Savable {
     public void attack(int enemyIdx, UserInterface ui) {
         player.attack(enemyIdx, ui);
         if (player.isDead()) {
-            player.setCurrentPlace(spawnId);
+            player.resurrect(getSpawn());
         }
     }
 

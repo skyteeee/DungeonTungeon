@@ -13,7 +13,8 @@ import java.util.List;
 public class Player extends EntityClass implements Character {
     private int currentPlaceId;
     private final Inventory inventory = new Inventory();
-    private int health = 1000;
+    private static final int INITIAL_HEALTH = 250;
+    private int health = INITIAL_HEALTH;
     private String title = "Player 1";
     @Override
     public void setCurrentPlace(Place place) {
@@ -100,12 +101,16 @@ public class Player extends EntityClass implements Character {
             System.out.println("Why is it so cold and dark here?");
             UserInterface.sleep(1000);
             System.out.println("YOU DIED. HOW PITIFUL...");
-
             inventory.dropAll(getCurrentPlace());
 
             return true;
         }
         return false;
+    }
+
+    public void resurrect(Place place) {
+        setHealth(INITIAL_HEALTH);
+        setCurrentPlace(place);
     }
 
     @Override
