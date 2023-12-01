@@ -6,6 +6,8 @@ import com.skyteeee.tungeon.entities.items.Weapon;
 import com.skyteeee.tungeon.storage.Storage;
 
 import javax.swing.text.PlainView;
+import java.util.Collection;
+import java.util.List;
 import java.util.Random;
 
 public class EntityFactory {
@@ -243,16 +245,30 @@ public class EntityFactory {
     }
 
     public Enemy createEnemy() {
-        Enemy enemy = newEnemy();
+        return createEnemy(1);
+    }
+
+    public Enemy createEnemy(int level) {
+        Enemy enemy = newEnemy(level);
         storage.addNewEntity(enemy);
-        enemy.setTitle(enemyDescriptors[rnd.nextInt(enemyDescriptors.length)] + " " + enemyNames[rnd.nextInt(enemyNames.length)]);
+        enemy.setTitle("LVL " + level + " " + enemyDescriptors[rnd.nextInt(enemyDescriptors.length)] + " " + enemyNames[rnd.nextInt(enemyNames.length)]);
         enemy.getInventory().addItem(createWeapon());
 
         return enemy;
     }
 
-    public Enemy newEnemy() {
-        return new Enemy();
+    public void createEnemies(int amount, int level, Place exclude) {
+        List<Place> places = storage.getAllPlaces();
+        places.remove(exclude);
+        for (int i = 0; i < amount; i++) {
+            Enemy enemy = createEnemy(level);
+            Place place = places.get(rnd.nextInt(places.size()));
+            enemy.setCurrentPlace(place);
+        }
+    }
+
+    public Enemy newEnemy(int level) {
+        return new Enemy(level);
     }
 
     public Path createPath() {

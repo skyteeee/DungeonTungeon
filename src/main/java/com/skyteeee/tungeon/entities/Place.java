@@ -127,7 +127,7 @@ public class Place extends EntityClass {
     }
 
     public int getPathCount() {
-        return paths.size();
+         return paths.size();
     }
 
     public void printState(Player player) {

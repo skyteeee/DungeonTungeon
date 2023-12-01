@@ -6,10 +6,7 @@ import com.skyteeee.tungeon.entities.Path;
 import com.skyteeee.tungeon.entities.Place;
 import com.skyteeee.tungeon.entities.items.Item;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class Storage {
 
@@ -56,6 +53,17 @@ public class Storage {
 
     public Collection<Entity> getAllEntities() {
         return entities.values();
+    }
+
+    public List<Place> getAllPlaces() {
+        Collection<Entity> entities = getAllEntities();
+        List<Place> places = new ArrayList<>(entities.size());
+        for (Entity entity : entities) {
+            if (entity instanceof Place place) {
+                places.add(place);
+            }
+        }
+        return places;
     }
 
     public void removeEntity(Entity entity) {

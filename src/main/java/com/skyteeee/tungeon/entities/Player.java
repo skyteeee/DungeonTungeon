@@ -1,5 +1,6 @@
 package com.skyteeee.tungeon.entities;
 
+import com.skyteeee.tungeon.World;
 import com.skyteeee.tungeon.entities.items.Item;
 import com.skyteeee.tungeon.entities.items.Weapon;
 import com.skyteeee.tungeon.storage.Inventory;
@@ -7,14 +8,14 @@ import com.skyteeee.tungeon.storage.Storage;
 import com.skyteeee.tungeon.utils.UserInterface;
 import org.json.JSONObject;
 
-import java.util.ArrayList;
-import java.util.List;
-
 public class Player extends EntityClass implements Character {
     private int currentPlaceId;
     private final Inventory inventory = new Inventory();
     private static final int INITIAL_HEALTH = 250;
     private int health = INITIAL_HEALTH;
+    private int level = 1;
+    private int xp = 0;
+    private World world;
     private String title = "Player 1";
     @Override
     public void setCurrentPlace(Place place) {
@@ -23,6 +24,10 @@ public class Player extends EntityClass implements Character {
     @Override
     public void setCurrentPlace(int id) {
         currentPlaceId = id;
+    }
+
+    public void setWorld(World world) {
+        this.world = world;
     }
 
     @Override
@@ -38,6 +43,40 @@ public class Player extends EntityClass implements Character {
         inventory.removeItem(item);
         System.out.println("You dropped a " + item.getTitle());
         return item;
+    }
+
+    @Override
+    public void setLevel(int level) {
+        this.level = level;
+    }
+
+    @Override
+    public int getLevel() {
+        return level;
+    }
+
+    public void setXP(int xp) {
+        this.xp = xp;
+    }
+
+    public void addXP(int xp) {
+        this.xp += xp;
+        levelUp();
+    }
+
+    public int getXP() {
+        return xp;
+    }
+
+    private int getLevelThreshold() {
+        return (int) (100 * Math.pow(Math.E, level));
+    }
+
+    private void levelUp() {
+        while (getXP() >= getLevelThreshold()) {
+            level ++;
+            world.onLevelUp(level);
+        }
     }
 
     public boolean isDead() {
@@ -134,7 +173,7 @@ public class Player extends EntityClass implements Character {
     }
 
     public void printState() {
-        UserInterface.slowPrint(getTitle() + " | health : " + health + "\n");
+        UserInterface.slowPrint(getTitle() + " | health : " + health + " | xp: " + getXP() + "/" + getLevelThreshold() + " | level: " + getLevel() + "\n");
     }
 
     @Override
@@ -144,6 +183,8 @@ public class Player extends EntityClass implements Character {
         object.put("currentPlace", currentPlaceId);
         object.put("inventory", inventory.serialize());
         object.put("health", getHealth());
+        object.put("level", getLevel());
+        object.put("xp", getXP());
         return object;
     }
 
@@ -153,5 +194,7 @@ public class Player extends EntityClass implements Character {
         setCurrentPlace(object.getInt("currentPlace"));
         inventory.deserialize(object.getJSONObject("inventory"));
         setHealth(object.optInt("health", getHealth()));
+        setLevel(object.optInt("level", 1));
+        setXP(object.optInt("xp", 0));
     }
 }

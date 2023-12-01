@@ -12,8 +12,13 @@ public class Enemy extends EntityClass implements Character{
     private Inventory inventory = new Inventory();
     private String title;
     private int weaponIdx = 0;
+    private int level = 1;
 
     private int health = 100;
+
+    public Enemy(int level) {
+        this.level = level;
+    }
 
     @Override
     public void setCurrentPlace(int id) {
@@ -47,8 +52,23 @@ public class Enemy extends EntityClass implements Character{
         return null;
     }
 
+    @Override
+    public void setLevel(int level) {
+        this.level = level;
+    }
+
+    @Override
+    public int getLevel() {
+        return level;
+    }
+
     public void printState() {
         System.out.println(title + " holding a " + inventory.getItem(weaponIdx).getTitle());
+    }
+
+    private int xpOnDeath(Character killer) {
+        int xp = 100 * level + (level-killer.getLevel()) * 10;
+        return Math.max(xp, 3);
     }
 
     @Override
@@ -59,6 +79,10 @@ public class Enemy extends EntityClass implements Character{
         if (!checkDeath()) {
             UserInterface.slowPrint(getTitle() + " has survived your attack. It has " + health + " health remaining. \n");
             attack(attacker, (Weapon) inventory.getItem(weaponIdx));
+        } else {
+            if (attacker instanceof Player player) {
+                player.addXP(xpOnDeath(attacker));
+            }
         }
     }
 
@@ -99,6 +123,7 @@ public class Enemy extends EntityClass implements Character{
         object.put("inventory", inventory.serialize());
         object.put("currentPlace", currentPlaceId);
         object.put("health", getHealth());
+        object.put("level", getLevel());
         return object;
     }
 
@@ -109,6 +134,7 @@ public class Enemy extends EntityClass implements Character{
         setCurrentPlace(object.getInt("currentPlace"));
         inventory.deserialize(object.getJSONObject("inventory"));
         setHealth(object.optInt("health", getHealth()));
+        setLevel(object.optInt("level", 1));
     }
 
     public String getTitle() {

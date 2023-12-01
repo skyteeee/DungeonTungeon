@@ -5,20 +5,26 @@ import com.skyteeee.tungeon.entities.Place;
 import com.skyteeee.tungeon.entities.Player;
 import com.skyteeee.tungeon.entities.items.Item;
 import com.skyteeee.tungeon.storage.Storage;
-import com.skyteeee.tungeon.utils.EntityFactory;
-import com.skyteeee.tungeon.utils.GameObject;
-import com.skyteeee.tungeon.utils.Savable;
-import com.skyteeee.tungeon.utils.UserInterface;
+import com.skyteeee.tungeon.utils.*;
 import org.json.JSONObject;
 
 public class World implements GameObject, Savable {
     private Player player;
     private int spawnId;
+    private EntityFactory factory;
+    private int totalPlaces = 10;
+
+    public World (EntityFactory factory) {
+        this.factory = factory;
+    }
+
+    public void setTotalPlaces(int places) {
+        totalPlaces = places;
+    }
+
     public Player getPlayer() {
         return player;
     }
-
-
     public void setSpawn(int id) {
         spawnId = id;
     }
@@ -65,7 +71,18 @@ public class World implements GameObject, Savable {
         return false;
     }
 
-    public void setPlayer(Player player) {this.player = player;}
+    public void setPlayer(Player player) {
+        this.player = player;
+        player.setWorld(this);
+    }
+
+    public void onLevelUp(int level) {
+        int enemiesToMake = (int)(totalPlaces * 0.1 + level * 0.2);
+        Place exclude = player.getCurrentPlace();
+        factory.createEnemies((int)(enemiesToMake * 0.25), level-1, exclude);
+        factory.createEnemies((int)(enemiesToMake * 0.55), level, exclude);
+        factory.createEnemies((int)(enemiesToMake * 0.2), level+1, exclude);
+    }
 
 
     @Override

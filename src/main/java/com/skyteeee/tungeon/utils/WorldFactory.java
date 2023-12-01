@@ -98,6 +98,7 @@ public class WorldFactory {
 
 
         World world = newWorld();
+        world.setTotalPlaces(totalPlaces);
         world.setSpawn(first);
         world.setPlayer(factory.createPlayer());
         world.getPlayer().setCurrentPlace(first);
@@ -105,7 +106,7 @@ public class WorldFactory {
     }
 
     public World newWorld() {
-        return new World();
+        return new World(factory);
     }
 
 
@@ -220,7 +221,7 @@ public class WorldFactory {
 
         for (int i = 0; i < enemiesArray.length(); i++) {
             JSONObject enemyObject = enemiesArray.getJSONObject(i);
-            Enemy enemy = factory.newEnemy();
+            Enemy enemy = factory.newEnemy(1);
             enemy.deserialize(enemyObject);
             storage.putEntity(enemy);
         }
@@ -256,6 +257,7 @@ public class WorldFactory {
         }
 
         world.deserialize(worldObject);
+        world.setTotalPlaces(placesArray.length());
 
         loadedFrom = fileNameString;
 
