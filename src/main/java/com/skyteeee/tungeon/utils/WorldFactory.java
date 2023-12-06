@@ -49,7 +49,7 @@ public class WorldFactory {
             if (!nextPlaces.isEmpty()) {
                 current = nextPlaces.remove(0);
                 int maxPaths = maxPathsPerPlace - current.getPathCount();
-                newPaths = maxPaths == 0 ? 0 : factory.rnd.nextInt(maxPaths + 1);
+                newPaths = maxPaths == 0 ? 0 : EntityFactory.rnd.nextInt(maxPaths + 1);
             } else {
                 //choose one of existing and always add new path & place
                 if (!availPlaces.isEmpty()) {
@@ -68,7 +68,7 @@ public class WorldFactory {
             if (newPaths > 0) {
                 for (int i = 0; i < newPaths; i++) {
                     Path path = factory.createPath();
-                    boolean needNewPlace = forceNewPlace || availPlaces.isEmpty() || factory.rnd.nextInt(100) <= newPlaceChance;
+                    boolean needNewPlace = forceNewPlace || availPlaces.isEmpty() || EntityFactory.rnd.nextInt(100) <= newPlaceChance;
                     Place destination;
                     if (needNewPlace) {
                         destination = createPlace();
@@ -115,7 +115,7 @@ public class WorldFactory {
 
     private Place getAvailablePlace(List<Place> skip) {
         while (true) {
-            int idx = factory.rnd.nextInt(availPlaces.size());
+            int idx = EntityFactory.rnd.nextInt(availPlaces.size());
             Place chosen = availPlaces.get(idx);
             if (!skip.contains(chosen)) {
                 return chosen;

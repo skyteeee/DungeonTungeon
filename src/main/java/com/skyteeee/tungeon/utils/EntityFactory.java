@@ -2,6 +2,7 @@ package com.skyteeee.tungeon.utils;
 
 import com.skyteeee.tungeon.entities.*;
 import com.skyteeee.tungeon.entities.Character;
+import com.skyteeee.tungeon.entities.items.Armor;
 import com.skyteeee.tungeon.entities.items.Weapon;
 import com.skyteeee.tungeon.storage.Storage;
 
@@ -198,7 +199,8 @@ public class EntityFactory {
     private Storage storage = Storage.getInstance();
 
     private static final int WEAPON_CHANCE = 50;
-    private static final int ENEMY_CHANCE = 80;
+    private static final int ENEMY_CHANCE = 40;
+    private static final int ARMOR_CHANCE = 80;
 
     public Weapon createWeapon() {
         Weapon weapon = newWeapon();
@@ -216,6 +218,20 @@ public class EntityFactory {
         return new Weapon();
     }
 
+    public Armor createArmor() {
+        Armor armor = newArmor();
+        storage.addNewEntity(armor);
+        armor.setTitle("DEFAULT ARMOR");
+        armor.setAbsorption(0.9f);
+        armor.setDefence(1);
+        //TODO: implement random armor generation
+        return armor;
+    }
+
+    public Armor newArmor() {
+        return new Armor();
+    }
+
 
     public Place createPlace () {
         Place place = newPlace();
@@ -228,6 +244,10 @@ public class EntityFactory {
         place.setTitle(descriptor + " " + terrain);
         if (rnd.nextInt(100) < WEAPON_CHANCE) {
             place.getInventory().addItem(createWeapon());
+        }
+
+        if (rnd.nextInt(100) < WEAPON_CHANCE) {
+            place.getInventory().addItem(createArmor());
         }
 
         if (rnd.nextInt(100) < ENEMY_CHANCE) {
