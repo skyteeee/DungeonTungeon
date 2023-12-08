@@ -1,5 +1,6 @@
 package com.skyteeee.tungeon.entities;
 
+import com.skyteeee.tungeon.entities.items.Armor;
 import com.skyteeee.tungeon.entities.items.Item;
 import com.skyteeee.tungeon.entities.items.Weapon;
 import com.skyteeee.tungeon.storage.Inventory;
@@ -10,6 +11,7 @@ import org.json.JSONObject;
 public class Enemy extends EntityClass implements Character{
     private int currentPlaceId;
     private Inventory inventory = new Inventory();
+    private int currentArmor = 0;
     private String title;
     private int weaponIdx = 0;
 
@@ -30,6 +32,23 @@ public class Enemy extends EntityClass implements Character{
     @Override
     public Place getCurrentPlace() {
         return (Place) Storage.getInstance().getEntity(currentPlaceId);
+    }
+
+    public Armor getArmor() {
+        if (currentArmor == 0) return null;
+        return (Armor)Storage.getInstance().getItem(currentArmor);
+    }
+
+    public int getArmorId() {
+        return currentArmor;
+    }
+
+    public void setArmor(Armor armor) {
+        currentArmor = armor.getId();
+    }
+
+    public void setArmor(int id) {
+        currentArmor = id;
     }
 
     @Override
@@ -53,7 +72,14 @@ public class Enemy extends EntityClass implements Character{
 
     @Override
     public void defend(Character attacker, Weapon weapon) {
-        int damage = weapon.getDamage();
+        int damage;
+        if (currentArmor == 0) {
+            damage = weapon.getDamage();
+        } else {
+            Armor armor = getArmor();
+            damage = (int)(weapon.getDamage() * armor.getAbsorption()) - armor.getDefence();
+        }
+        damage = Math.max(damage, 0);
         health -= damage;
         UserInterface.slowPrint("Dealt " + damage + " damage. ");
         if (!checkDeath()) {
@@ -75,7 +101,9 @@ public class Enemy extends EntityClass implements Character{
         if (health <= 0) {
             System.out.println("KILLED: " + title);
             inventory.dropAll(getCurrentPlace());
-            getCurrentPlace().removeEnemy(this);
+            Place place = getCurrentPlace();
+            getArmor().drop(place);
+            place.removeEnemy(this);
             return true;
         }
         return false;
@@ -99,6 +127,7 @@ public class Enemy extends EntityClass implements Character{
         object.put("inventory", inventory.serialize());
         object.put("currentPlace", currentPlaceId);
         object.put("health", getHealth());
+        object.put("armor", getArmorId());
         return object;
     }
 
@@ -107,6 +136,7 @@ public class Enemy extends EntityClass implements Character{
         setId(object.getInt("id"));
         setTitle(object.getString("title"));
         setCurrentPlace(object.getInt("currentPlace"));
+        setArmor(object.optInt("armor", 0));
         inventory.deserialize(object.getJSONObject("inventory"));
         setHealth(object.optInt("health", getHealth()));
     }

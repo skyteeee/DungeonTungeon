@@ -180,6 +180,14 @@ public class UserInterface {
                     }
                     break;
 
+                    case "/equip": {
+                        if (parts.length == 1) {
+                            return false;
+                        }
+                        //TODO: add ability to equip armor from inventory. Current armor should be put back into the inventory
+                    }
+                    break;
+
                     default: {
                         return false;
                     }

@@ -11,9 +11,13 @@ public class Armor extends EntityClass implements Item {
     private float dropChance;
     private int defence = 10;
     private float absorption = 0.9f;
+    int level = 1;
     @Override
     public String getTitle() {
-        return title;
+        return getTitle(false);
+    }
+    public String getTitle(boolean raw) {
+        return title + (raw ? "" : " " + level);
     }
 
     @Override
@@ -58,7 +62,7 @@ public class Armor extends EntityClass implements Item {
     public JSONObject serialize() {
         JSONObject object = new JSONObject();
         object.put("id", getId());
-        object.put("title", getTitle());
+        object.put("title", getTitle(true));
         object.put("defence", getDefence());
         object.put("absorption", getAbsorption());
         object.put("dropChance", getDropChance());
