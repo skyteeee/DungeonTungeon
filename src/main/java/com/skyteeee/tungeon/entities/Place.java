@@ -19,7 +19,7 @@ public class Place extends EntityClass {
     private String description;
     private String title;
 
-    private final Inventory inventory = new Inventory();
+    private final Inventory inventory = new Inventory(10);
 
     public Item give(int choice) {
         Item item = inventory.getItem(choice);

@@ -13,8 +13,24 @@ import java.util.List;
 public class Inventory implements Savable {
     private final List<Integer> inventory = new ArrayList<>();
 
-    public void addItem(Item item) {
+    private final int maxSize;
+
+    public Inventory() {
+        this(3);
+    }
+
+    public Inventory(int maxSize) {
+        this.maxSize = maxSize;
+    }
+
+    public Item addItem(Item item) {
+        Item popped = null;
+        if (inventory.size() >= maxSize) {
+            popped = getItem(0);
+            inventory.remove(0);
+        }
         inventory.add(item.getId());
+        return popped;
     }
 
     public void addItem(int id) {

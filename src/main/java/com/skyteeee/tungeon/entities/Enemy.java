@@ -14,10 +14,12 @@ public class Enemy extends EntityClass implements Character{
     private int weaponIdx = 0;
     private int level = 1;
 
-    private int health = 100;
+    private static final int INITIAL_HEALTH = 100;
+    private int health = INITIAL_HEALTH;
 
     public Enemy(int level) {
         this.level = level;
+        health = INITIAL_HEALTH + (int) (INITIAL_HEALTH * (level-1) * 0.1);
     }
 
     @Override

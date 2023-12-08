@@ -1,12 +1,9 @@
 package com.skyteeee.tungeon.utils;
 
 import com.skyteeee.tungeon.entities.*;
-import com.skyteeee.tungeon.entities.Character;
 import com.skyteeee.tungeon.entities.items.Weapon;
 import com.skyteeee.tungeon.storage.Storage;
 
-import javax.swing.text.PlainView;
-import java.util.Collection;
 import java.util.List;
 import java.util.Random;
 
@@ -183,8 +180,28 @@ public class EntityFactory {
 
         }
 
-        int getDamage(Random rnd) {
-            return rnd.nextInt(damageRange[0], damageRange[1]+1);
+        int getDamage(Random rnd, int level) {
+            int initDamage = rnd.nextInt(damageRange[0], damageRange[1]+1);
+            int damage = initDamage + (int) (initDamage * level * 0.112);
+            return damage;
+        }
+
+    }
+
+    static class CursedAbility extends WeaponAbility {
+
+        CursedAbility(String desc, int dmgMin, int dmgMax, float dropChance) {
+            super(desc, dmgMin, dmgMax, dropChance);
+        }
+
+        @Override
+        int getDamage(Random rnd, int level) {
+            int damage = 0;
+
+            for (int i = 0; i <= (level/4) + 1; i++) {
+                damage += (int) (damageRange[0] * Math.pow(10, i));
+            }
+            return damage;
         }
 
     }
@@ -194,7 +211,7 @@ public class EntityFactory {
             new WeaponAbility("mysterious", 5, 1000, 0.6f),
             new WeaponAbility("strong", 25, 100, 0.4f),
             new WeaponAbility("great", 100, 200, 0.5f),
-            new WeaponAbility("cursed", 666, 666, 1f)
+            new CursedAbility("cursed", 6, 6, 1f)
     };
 
     private Storage storage = Storage.getInstance();
@@ -202,16 +219,27 @@ public class EntityFactory {
     private static final int WEAPON_CHANCE = 50;
     private static final int ENEMY_CHANCE = 80;
 
-    public Weapon createWeapon() {
+    public Weapon createWeapon(int level) {
         Weapon weapon = newWeapon();
         storage.addNewEntity(weapon);
         String type = weaponTypes[rnd.nextInt(weaponTypes.length)];
         WeaponAbility ability = weaponAbilities[rnd.nextInt(weaponAbilities.length)];
         String color = colors[rnd.nextInt(colors.length)];
         weapon.setTitle(ability.description + " " + color + " " + type);
-        weapon.setDamage(ability.getDamage(rnd));
+        weapon.setDamage(ability.getDamage(rnd, level));
         weapon.setDropChance(ability.dropChance);
+        weapon.setLevel(level);
         return weapon;
+    }
+
+    public void scatterWeapons(int amount, int level, Place exclude) {
+        List<Place> places = storage.getAllPlaces();
+        places.remove(exclude);
+        for (int i = 0; i < amount; i++) {
+            Weapon weapon = createWeapon(level);
+            Place place = places.get(rnd.nextInt(places.size()));
+            place.take(weapon);
+        }
     }
 
     public Weapon newWeapon() {
@@ -229,7 +257,7 @@ public class EntityFactory {
         place.setDescription(size + " " + descriptor + " " + color + " " + terrain);
         place.setTitle(descriptor + " " + terrain);
         if (rnd.nextInt(100) < WEAPON_CHANCE) {
-            place.getInventory().addItem(createWeapon());
+            place.getInventory().addItem(createWeapon(1));
         }
 
         if (rnd.nextInt(100) < ENEMY_CHANCE) {
@@ -252,12 +280,12 @@ public class EntityFactory {
         Enemy enemy = newEnemy(level);
         storage.addNewEntity(enemy);
         enemy.setTitle("LVL " + level + " " + enemyDescriptors[rnd.nextInt(enemyDescriptors.length)] + " " + enemyNames[rnd.nextInt(enemyNames.length)]);
-        enemy.getInventory().addItem(createWeapon());
+        enemy.getInventory().addItem(createWeapon(level));
 
         return enemy;
     }
 
-    public void createEnemies(int amount, int level, Place exclude) {
+    public void scatterEnemies(int amount, int level, Place exclude) {
         List<Place> places = storage.getAllPlaces();
         places.remove(exclude);
         for (int i = 0; i < amount; i++) {

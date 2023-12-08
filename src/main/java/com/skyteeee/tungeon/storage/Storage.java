@@ -20,7 +20,14 @@ public class Storage {
     Map<Integer, Entity> entities = new HashMap<>();
 
     public void putEntity(Entity entity) {
-        entities.put(entity.getId(), entity);
+        int id = entity.getId();
+        if (entities.containsKey(id)) {
+            throw new RuntimeException("Id " + id + " already exists. ");
+        }
+        entities.put(id, entity);
+        if (id > nextId - 1) {
+            nextId = id + 1;
+        }
     }
 
     public Entity getEntity(int id) {

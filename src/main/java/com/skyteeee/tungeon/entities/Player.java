@@ -33,7 +33,10 @@ public class Player extends EntityClass implements Character {
     @Override
     public void take(int choice) {
         Item item = getCurrentPlace().give(choice);
-        inventory.addItem(item);
+        Item popped = inventory.addItem(item);
+        if (popped != null) {
+            getCurrentPlace().take(popped);
+        }
         System.out.println("You took a " + item.getTitle());
     }
 
@@ -74,7 +77,10 @@ public class Player extends EntityClass implements Character {
 
     private void levelUp() {
         while (getXP() >= getLevelThreshold()) {
-            level ++;
+            health += (int) (INITIAL_HEALTH * level * 0.1);
+            UserInterface.strike();
+            UserInterface.slowPrint("LEVEL UP!!! YOU ARE NOW LEVEL " + ++level + "\n");
+            UserInterface.strike();
             world.onLevelUp(level);
         }
     }
