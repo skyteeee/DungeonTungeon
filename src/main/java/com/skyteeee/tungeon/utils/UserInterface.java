@@ -184,9 +184,8 @@ public class UserInterface {
                         if (parts.length == 1) {
                             return false;
                         }
-                        //TODO: add ability to equip armor from inventory. Current armor should be put back into the inventory
+                        return currentWorld.getPlayer().equipArmor(Integer.parseInt(parts[1])-1);
                     }
-                    break;
 
                     default: {
                         return false;

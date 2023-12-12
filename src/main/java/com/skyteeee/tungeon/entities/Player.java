@@ -7,6 +7,7 @@ import com.skyteeee.tungeon.storage.Inventory;
 import com.skyteeee.tungeon.storage.Storage;
 import com.skyteeee.tungeon.utils.EntityFactory;
 import com.skyteeee.tungeon.utils.UserInterface;
+import com.sun.source.tree.WhileLoopTree;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
@@ -31,6 +32,18 @@ public class Player extends EntityClass implements Character {
     public Armor getArmor() {
         if (currentArmor == 0) return null;
         return (Armor)Storage.getInstance().getItem(currentArmor);
+    }
+
+    public boolean equipArmor(int invIdx) {
+        if (inventory.getItem(invIdx) instanceof Armor armor) {
+            if (currentArmor != 0) {
+                getCurrentPlace().take(getArmor());
+                inventory.removeItem(armor);
+            }
+            setArmor(armor);
+            return true;
+        }
+        return false;
     }
 
     public int getArmorId() {
@@ -71,7 +84,7 @@ public class Player extends EntityClass implements Character {
         if (currentArmor != 0) {
             Armor armor = getArmor();
             UserInterface.slowPrint("You are wearing " + armor.getTitle());
-            UserInterface.slowPrint(" | Absorption: " + (int)(armor.getAbsorption() * 100) / 100 + "; Defence: " + armor.getDefence() + "\n");
+            UserInterface.slowPrint(" | Absorption: " + ((int)((1 - armor.getAbsorption()) * 100) / 100f) + "; Defence: " + armor.getDefence() + "\n");
         }
     }
 
@@ -85,16 +98,28 @@ public class Player extends EntityClass implements Character {
         return title;
     }
 
+    private boolean noWeapons() {
+        for (int i = 0; i < inventory.size(); i++) {
+            if (inventory.getItem(i) instanceof Weapon) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     public void attack(int enemyIdx, UserInterface ui) {
         Enemy enemy = getCurrentPlace().getEnemy(enemyIdx);
-        if (inventory.isEmpty()) {
+        if (inventory.isEmpty() || noWeapons()) {
             System.out.println("As you leap towards the enemy, you realize that you lack any weapons. It is too late to turn away now. ");
             enemy.attack(this, null);
         } else {
             System.out.println("You have the following items: ");
             inventory.printState(true);
-            int weaponIdx = ui.inputChoice("Which weapon would you like to use? ", inventory.size()) - 1;
-            Weapon weapon = (Weapon) inventory.getItem(weaponIdx);
+            Item selected = inventory.getItem(ui.inputChoice("Which weapon would you like to use? ", inventory.size()) - 1);
+            while (!(selected instanceof Weapon weapon)) {
+                UserInterface.slowPrint("Selected item is not a weapon. Please select a weapon. \n");
+                selected = inventory.getItem(ui.inputChoice("Which weapon would you like to use? ", inventory.size()) - 1);
+            }
             attack(enemy, weapon);
         }
     }

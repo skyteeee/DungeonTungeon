@@ -232,11 +232,11 @@ public class EntityFactory {
     };
 
     static ArmorAbility[] armorAbilities = new ArmorAbility[] {
-            new ArmorAbility("rusty", 0, 2, 0.95f, 1.0f, 0.2f),
-            new ArmorAbility("thin", 1, 5, 0.9f, 1.0f, 0.2f),
-            new ArmorAbility("glorious", 5, 25, 0.75f, 0.9f, 0.3f),
-            new ArmorAbility("polished", 10, 30, 0.5f, 0.8f, 0.5f),
-            new ArmorAbility("legendary", 25, 100, 0.5f, 0.8f, 0.5f),
+            new ArmorAbility("rusty", 1, 3, 0.95f, 1.0f, 0.2f),
+            new ArmorAbility("thin", 2, 7, 0.9f, 1.0f, 0.2f),
+            new ArmorAbility("glorious", 10, 25, 0.75f, 0.9f, 0.3f),
+            new ArmorAbility("polished", 10, 35, 0.5f, 0.8f, 0.5f),
+            new ArmorAbility("legendary", 30, 100, 0.5f, 0.8f, 0.5f),
 
     };
 
@@ -267,7 +267,7 @@ public class EntityFactory {
         storage.addNewEntity(armor);
         ArmorAbility ability = armorAbilities[rnd.nextInt(armorAbilities.length)];
         String material = armorMaterials[rnd.nextInt(armorMaterials.length)];
-        armor.setTitle(ability.description + " " + material + " armor.");
+        armor.setTitle(ability.description + " " + material + " armor");
         armor.setDefence(ability.getDefence(rnd));
         armor.setAbsorption(ability.getAbsorption(rnd));
         armor.setDropChance(ability.dropChance);
