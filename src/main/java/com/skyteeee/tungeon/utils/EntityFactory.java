@@ -1,6 +1,7 @@
 package com.skyteeee.tungeon.utils;
 
 import com.skyteeee.tungeon.entities.*;
+import com.skyteeee.tungeon.entities.items.Armor;
 import com.skyteeee.tungeon.entities.items.Weapon;
 import com.skyteeee.tungeon.storage.Storage;
 
@@ -165,6 +166,41 @@ public class EntityFactory {
             "the one who must not be named"
     };
 
+    static String[] armorMaterials = new String[] {
+            "bronze",
+            "obsidian",
+            "golden",
+            "chainmail",
+            "magic",
+            "leather"
+    };
+
+
+    static class ArmorAbility {
+        String description;
+        int[] defenceRange = new int[2];
+        float[] absorptionRange = new float[2];
+        float dropChance;
+
+        ArmorAbility(String description, int defMin, int defMax, float absMin, float absMax, float dropChance) {
+            this.description = description;
+            defenceRange[0] = defMin;
+            defenceRange[1] = defMax;
+            absorptionRange[0] = absMin;
+            absorptionRange[1] = absMax;
+            this.dropChance = dropChance;
+        }
+
+        int getDefence(Random rnd) {
+            return rnd.nextInt(defenceRange[0], defenceRange[1]);
+        }
+
+        float getAbsorption(Random rnd) {
+            return rnd.nextFloat(absorptionRange[0], absorptionRange[1]);
+        }
+
+    }
+
     static class WeaponAbility {
         String description;
         static final int MAX_DAMAGE = 100000;
@@ -214,10 +250,20 @@ public class EntityFactory {
             new CursedAbility("cursed", 6, 6, 1f)
     };
 
+    static ArmorAbility[] armorAbilities = new ArmorAbility[] {
+            new ArmorAbility("rusty", 1, 3, 0.95f, 1.0f, 0.2f),
+            new ArmorAbility("thin", 2, 7, 0.9f, 1.0f, 0.2f),
+            new ArmorAbility("glorious", 10, 25, 0.75f, 0.9f, 0.3f),
+            new ArmorAbility("polished", 10, 35, 0.5f, 0.8f, 0.5f),
+            new ArmorAbility("legendary", 30, 100, 0.5f, 0.8f, 0.5f),
+
+    };
+
     private Storage storage = Storage.getInstance();
 
     private static final int WEAPON_CHANCE = 50;
-    private static final int ENEMY_CHANCE = 80;
+    private static final int ENEMY_CHANCE = 40;
+    private static final int ARMOR_CHANCE = 80;
 
     public Weapon createWeapon(int level) {
         Weapon weapon = newWeapon();
@@ -246,6 +292,22 @@ public class EntityFactory {
         return new Weapon();
     }
 
+    public Armor createArmor() {
+        Armor armor = newArmor();
+        storage.addNewEntity(armor);
+        ArmorAbility ability = armorAbilities[rnd.nextInt(armorAbilities.length)];
+        String material = armorMaterials[rnd.nextInt(armorMaterials.length)];
+        armor.setTitle(ability.description + " " + material + " armor");
+        armor.setDefence(ability.getDefence(rnd));
+        armor.setAbsorption(ability.getAbsorption(rnd));
+        armor.setDropChance(ability.dropChance);
+        return armor;
+    }
+
+    public Armor newArmor() {
+        return new Armor();
+    }
+
 
     public Place createPlace () {
         Place place = newPlace();
@@ -258,6 +320,10 @@ public class EntityFactory {
         place.setTitle(descriptor + " " + terrain);
         if (rnd.nextInt(100) < WEAPON_CHANCE) {
             place.getInventory().addItem(createWeapon(1));
+        }
+
+        if (rnd.nextInt(100) < ARMOR_CHANCE) {
+            place.getInventory().addItem(createArmor());
         }
 
         if (rnd.nextInt(100) < ENEMY_CHANCE) {
@@ -281,7 +347,6 @@ public class EntityFactory {
         storage.addNewEntity(enemy);
         enemy.setTitle("LVL " + level + " " + enemyDescriptors[rnd.nextInt(enemyDescriptors.length)] + " " + enemyNames[rnd.nextInt(enemyNames.length)]);
         enemy.getInventory().addItem(createWeapon(level));
-
         return enemy;
     }
 

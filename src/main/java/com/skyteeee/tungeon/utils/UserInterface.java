@@ -180,6 +180,13 @@ public class UserInterface {
                     }
                     break;
 
+                    case "/equip": {
+                        if (parts.length == 1) {
+                            return false;
+                        }
+                        return currentWorld.getPlayer().equipArmor(Integer.parseInt(parts[1])-1);
+                    }
+
                     default: {
                         return false;
                     }
