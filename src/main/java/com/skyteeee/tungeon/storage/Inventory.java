@@ -49,8 +49,9 @@ public class Inventory implements Savable {
             System.out.print((i+1) + ": " + item.getTitle());
             if (detailed) {
                 if (item instanceof Weapon weapon) {
-                    System.out.println(" | Damage: " + weapon.getDamage());
+                    System.out.print(" | Damage: " + weapon.getDamage());
                 }
+                System.out.println();
             } else System.out.println();
         }
     }

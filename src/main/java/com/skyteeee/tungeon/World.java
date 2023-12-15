@@ -11,6 +11,8 @@ import com.skyteeee.tungeon.utils.Savable;
 import com.skyteeee.tungeon.utils.UserInterface;
 import org.json.JSONObject;
 
+import java.sql.Struct;
+
 public class World implements GameObject, Savable {
     private Player player;
     private int spawnId;
