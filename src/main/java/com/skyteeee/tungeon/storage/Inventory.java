@@ -1,6 +1,7 @@
 package com.skyteeee.tungeon.storage;
 
 import com.skyteeee.tungeon.entities.Place;
+import com.skyteeee.tungeon.entities.items.Armor;
 import com.skyteeee.tungeon.entities.items.Item;
 import com.skyteeee.tungeon.entities.items.Weapon;
 import com.skyteeee.tungeon.utils.Savable;
@@ -66,6 +67,9 @@ public class Inventory implements Savable {
             if (detailed) {
                 if (item instanceof Weapon weapon) {
                     System.out.print(" | Damage: " + weapon.getDamage());
+                }
+                if (item instanceof Armor armor) {
+                    System.out.print(" | Absorption: " + armor.getAbsorption(true) + "; Defence: " + armor.getDefence());
                 }
                 System.out.println();
             } else System.out.println();

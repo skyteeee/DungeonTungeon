@@ -5,6 +5,7 @@ import com.skyteeee.tungeon.entities.items.Item;
 import com.skyteeee.tungeon.entities.items.Weapon;
 import com.skyteeee.tungeon.storage.Inventory;
 import com.skyteeee.tungeon.storage.Storage;
+import com.skyteeee.tungeon.utils.EntityFactory;
 import com.skyteeee.tungeon.utils.UserInterface;
 import org.json.JSONObject;
 
@@ -84,11 +85,11 @@ public class Enemy extends EntityClass implements Character{
     }
 
     public void printState() {
-        System.out.println(title + " holding a " + inventory.getItem(weaponIdx).getTitle());
+        System.out.println(title + " holding a " + inventory.getItem(weaponIdx).getTitle() + "; it is wearing " + getArmor().getShortTitle());
     }
 
     private int xpOnDeath(Character killer) {
-        int xp = 100 * level + (level-killer.getLevel()) * 10;
+        int xp = 100 * level + (level-killer.getLevel()) * 10 + EntityFactory.rnd.nextInt(20)-10;
         return Math.max(xp, 3);
     }
 

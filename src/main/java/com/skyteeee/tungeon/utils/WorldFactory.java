@@ -104,7 +104,7 @@ public class WorldFactory {
         Player player = factory.createPlayer();
         world.setPlayer(player);
         player.setCurrentPlace(first);
-        player.setArmor(factory.createArmor());
+        player.setArmor(factory.createArmor(1));
         return world;
     }
 

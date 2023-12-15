@@ -42,9 +42,11 @@ public class Player extends EntityClass implements Character {
         if (inventory.getItem(invIdx) instanceof Armor armor) {
             if (currentArmor != 0) {
                 getCurrentPlace().take(getArmor());
+                UserInterface.slowPrint("You dropped " + getArmor().getTitle() + "\n");
                 inventory.removeItem(armor);
             }
             setArmor(armor);
+            UserInterface.slowPrint("You equipped " + armor.getTitle() + "\n");
             return true;
         }
         return false;
@@ -128,7 +130,7 @@ public class Player extends EntityClass implements Character {
         if (currentArmor != 0) {
             Armor armor = getArmor();
             UserInterface.slowPrint("You are wearing " + armor.getTitle());
-            UserInterface.slowPrint(" | Absorption: " + ((int)((1 - armor.getAbsorption()) * 100) / 100f) + "; Defence: " + armor.getDefence() + "\n");
+            UserInterface.slowPrint(" | Absorption: " + armor.getAbsorption(true) + "; Defence: " + armor.getDefence() + "\n");
         }
     }
 

@@ -191,12 +191,14 @@ public class EntityFactory {
             this.dropChance = dropChance;
         }
 
-        int getDefence(Random rnd) {
-            return rnd.nextInt(defenceRange[0], defenceRange[1]);
+        int getDefence(Random rnd, int level) {
+            int initDef = rnd.nextInt(defenceRange[0], defenceRange[1]);
+            return initDef + (int) (initDef * level * 0.07912);
         }
 
-        float getAbsorption(Random rnd) {
-            return rnd.nextFloat(absorptionRange[0], absorptionRange[1]);
+        float getAbsorption(Random rnd, int level) {
+            float initAbs = rnd.nextFloat(absorptionRange[0], absorptionRange[1]);
+            return initAbs - (initAbs * level * 0.0791f);
         }
 
     }
@@ -243,10 +245,10 @@ public class EntityFactory {
     }
 
     static WeaponAbility[] weaponAbilities = new WeaponAbility[] {
-            new WeaponAbility("weak", 1, 10, 0.2f),
-            new WeaponAbility("mysterious", 5, 1000, 0.6f),
+            new WeaponAbility("weak", 1, 30, 0.2f),
+            new WeaponAbility("mysterious", 5, 250, 0.6f),
             new WeaponAbility("strong", 25, 100, 0.4f),
-            new WeaponAbility("great", 100, 200, 0.5f),
+            new WeaponAbility("great", 50, 150, 0.5f),
             new CursedAbility("cursed", 6, 6, 1f)
     };
 
@@ -262,8 +264,8 @@ public class EntityFactory {
     private Storage storage = Storage.getInstance();
 
     private static final int WEAPON_CHANCE = 50;
-    private static final int ENEMY_CHANCE = 40;
-    private static final int ARMOR_CHANCE = 80;
+    private static final int ENEMY_CHANCE = 80;
+    private static final int ARMOR_CHANCE = 40;
 
     public Weapon createWeapon(int level) {
         Weapon weapon = newWeapon();
@@ -292,16 +294,26 @@ public class EntityFactory {
         return new Weapon();
     }
 
-    public Armor createArmor() {
+    public Armor createArmor(int level) {
         Armor armor = newArmor();
         storage.addNewEntity(armor);
         ArmorAbility ability = armorAbilities[rnd.nextInt(armorAbilities.length)];
         String material = armorMaterials[rnd.nextInt(armorMaterials.length)];
         armor.setTitle(ability.description + " " + material + " armor");
-        armor.setDefence(ability.getDefence(rnd));
-        armor.setAbsorption(ability.getAbsorption(rnd));
+        armor.setDefence(ability.getDefence(rnd, level));
+        armor.setAbsorption(ability.getAbsorption(rnd, level));
         armor.setDropChance(ability.dropChance);
         return armor;
+    }
+
+    public void scatterArmor(int amount, int level, Place exclude) {
+        List<Place> places = storage.getAllPlaces();
+        places.remove(exclude);
+        for (int i = 0; i < amount; i++) {
+            Armor armor = createArmor(level);
+            Place place = places.get(rnd.nextInt(places.size()));
+            place.take(armor);
+        }
     }
 
     public Armor newArmor() {
@@ -323,7 +335,7 @@ public class EntityFactory {
         }
 
         if (rnd.nextInt(100) < ARMOR_CHANCE) {
-            place.getInventory().addItem(createArmor());
+            place.getInventory().addItem(createArmor(1));
         }
 
         if (rnd.nextInt(100) < ENEMY_CHANCE) {
@@ -347,6 +359,7 @@ public class EntityFactory {
         storage.addNewEntity(enemy);
         enemy.setTitle("LVL " + level + " " + enemyDescriptors[rnd.nextInt(enemyDescriptors.length)] + " " + enemyNames[rnd.nextInt(enemyNames.length)]);
         enemy.getInventory().addItem(createWeapon(level));
+        enemy.setArmor(createArmor(level));
         return enemy;
     }
 

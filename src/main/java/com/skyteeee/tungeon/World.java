@@ -81,6 +81,7 @@ public class World implements GameObject, Savable {
     public void onLevelUp(int level) {
         int enemiesToMake = (int)(totalPlaces * 0.2 + level * 0.2);
         int weaponsToMake = (int)(totalPlaces * 0.2 + level * 0.15);
+        int armorsToMake = (int)(totalPlaces * 0.2 + level * 0.1);
         Place exclude = player.getCurrentPlace();
 
         factory.scatterEnemies((int)(enemiesToMake * 0.15), level-1, exclude);
@@ -91,6 +92,10 @@ public class World implements GameObject, Savable {
         factory.scatterWeapons((int)(weaponsToMake * 0.25), level-1, exclude);
         factory.scatterWeapons((int)(weaponsToMake * 0.55), level, exclude);
         factory.scatterWeapons((int)(weaponsToMake * 0.2), level+1, exclude);
+
+        factory.scatterArmor((int)(armorsToMake * 0.3), level-1, exclude);
+        factory.scatterArmor((int)(armorsToMake * 0.55), level, exclude);
+        factory.scatterArmor((int)(armorsToMake * 0.15), level+1, exclude);
     }
 
 
