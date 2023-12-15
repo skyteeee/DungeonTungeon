@@ -10,15 +10,27 @@ public class Weapon extends EntityClass implements Item{
     private String title;
     private int damage;
     private float dropChance;
+    private int level;
 
     @Override
     public String getTitle() {
-        return title;
+        return getTitle(false);
+    }
+    public String getTitle(boolean raw) {
+        return raw ? title : title + " " + level;
     }
 
     @Override
     public void setTitle(String title) {
         this.title = title;
+    }
+
+    public void setLevel(int level) {
+        this.level = level;
+    }
+
+    public int getLevel() {
+        return level;
     }
 
     public void setDamage(int dmg) {
@@ -50,7 +62,8 @@ public class Weapon extends EntityClass implements Item{
     public JSONObject serialize() {
         JSONObject object = new JSONObject();
         object.put("id", getId());
-        object.put("title", getTitle());
+        object.put("level", getLevel());
+        object.put("title", getTitle(true));
         object.put("damage", getDamage());
         object.put("dropChance", getDropChance());
         return object;
@@ -60,6 +73,7 @@ public class Weapon extends EntityClass implements Item{
     public void deserialize(JSONObject object) {
         setId(object.getInt("id"));
         setTitle(object.getString("title"));
+        setLevel(object.optInt("level", 1));
         setDamage(object.getInt("damage"));
         setDropChance(object.getFloat("dropChance"));
     }

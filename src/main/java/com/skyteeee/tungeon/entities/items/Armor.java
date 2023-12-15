@@ -20,9 +20,22 @@ public class Armor extends EntityClass implements Item {
         return title + (raw ? "" : " " + level);
     }
 
+    public String getShortTitle() {
+        String[] parts = title.split(" ");
+        return parts[0] + " " + parts[parts.length-1];
+    }
+
     @Override
     public void setTitle(String title) {
         this.title = title;
+    }
+
+    public int getLevel() {
+        return level;
+    }
+
+    public void setLevel(int level) {
+        this.level = level;
     }
 
     @Override
@@ -51,7 +64,10 @@ public class Armor extends EntityClass implements Item {
     }
 
     public float getAbsorption() {
-        return absorption;
+        return getAbsorption(false);
+    }
+    public float getAbsorption(boolean simple) {
+        return simple ? ((int)((1 - absorption) * 100) / 100f) : absorption;
     }
 
     public void setAbsorption(float absorption) {
@@ -66,6 +82,7 @@ public class Armor extends EntityClass implements Item {
         object.put("defence", getDefence());
         object.put("absorption", getAbsorption());
         object.put("dropChance", getDropChance());
+        object.put("level", getLevel());
         return object;
     }
 
@@ -76,5 +93,6 @@ public class Armor extends EntityClass implements Item {
         setDefence(object.getInt("defence"));
         setAbsorption(object.getFloat("absorption"));
         setDropChance(object.getFloat("dropChance"));
+        setLevel(object.optInt("level", 1));
     }
 }

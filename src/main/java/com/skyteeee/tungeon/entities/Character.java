@@ -9,6 +9,9 @@ public interface Character extends Entity {
     void setCurrentPlace(Place place);
     void setCurrentPlace(int id);
 
+    void setLevel(int level);
+    int getLevel();
+
     void setTitle(String title);
 
     String getTitle();
