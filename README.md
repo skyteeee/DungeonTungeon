@@ -2,7 +2,10 @@
 
 ## TODO
 
-- add enemy random attack (even if player doesn't attack first)
+- add weapon gen chance for balance
+- add enemy hoard attacks (other enemies counterattack too)
+- add not random enemy movement?
+- add random enemy vs enemy encounters?
 - add random enemy movement
 - add different types of enemies (bosses and such)
 - add weapon and armor durability

@@ -130,40 +130,40 @@ public class EntityFactory {
             "banana"
     };
 
-    static String[] enemyDescriptors = new String[] {
-            "grumpy",
-            "sad",
-            "furious",
-            "joyful",
-            "dumb",
-            "tired",
-            "dull",
-            "hyper",
-            "stormy",
-            "sly",
-            "crazy",
-            "scary",
-            "spooky",
-            "tired of life"
+    static EnemyAbility[] enemyDescriptors = new EnemyAbility[] {
+            new EnemyAbility("grumpy", 0, 0, 0.6f),
+            new EnemyAbility("sad", 0, 0, 0.2f),
+            new EnemyAbility("furious", 20, 20, 0.9f),
+            new EnemyAbility("joyful", 0, 0, 0.1f),
+            new EnemyAbility("dumb", 0, 0, 0.5f),
+            new EnemyAbility("tired", 0, 0, 0.1f),
+            new EnemyAbility("dull", 0, 0, 0.5f),
+            new EnemyAbility("hyper", 10, 10, 0.8f),
+            new EnemyAbility("stormy", 0, 0, 0.9f),
+            new EnemyAbility("sly", 0, 0, 0.5f),
+            new EnemyAbility("crazy", 0, 0, 0.75f),
+            new EnemyAbility("scary", 0, 0, 0.12f),
+            new EnemyAbility("spooky", 0, 0, 0.1f),
+            new EnemyAbility("tired of life", -20, -10, 0.01f)
     };
 
-    static String[] enemyNames = new String[] {
-            "ogre",
-            "elf",
-            "dwarf",
-            "gnome",
-            "worm",
-            "rabbit",
-            "tree",
-            "dragon",
-            "golem",
-            "light entity",
-            "ghost",
-            "bear",
-            "rat",
-            "ancient wizard advisor",
-            "wizard",
-            "the one who must not be named"
+    static EnemyAbility[] enemyNames = new EnemyAbility[] {
+            new EnemyAbility("ogre", 100, 150, 1),
+            new EnemyAbility("elf", 50, 100, 1),
+            new EnemyAbility("dwarf", 50, 75, 1),
+            new EnemyAbility("gnome", 50, 80, 1),
+            new EnemyAbility("worm", 10, 50, 1),
+            new EnemyAbility("rabbit", 15, 45, 1),
+            new EnemyAbility("tree", 100, 125, 1),
+            new EnemyAbility("dragon", 100, 200, 1),
+            new EnemyAbility("golem", 150, 175, 1),
+            new EnemyAbility("light entity", 150, 250, 1),
+            new EnemyAbility("ghost", 10, 25, 1),
+            new EnemyAbility("bear", 30, 100, 1),
+            new EnemyAbility("rat", 1, 30, 1),
+            new EnemyAbility("ancient wizard advisor", 20, 150, 1),
+            new EnemyAbility("wizard", 40, 120, 1),
+            new EnemyAbility("the one who must not be named", 98, 201, 1)
     };
 
     static String[] armorMaterials = new String[] {
@@ -174,6 +174,32 @@ public class EntityFactory {
             "magic",
             "leather"
     };
+
+    static class EnemyAbility {
+        String label;
+        int[] healthRange = new int[2];
+        float attackChance;
+        EnemyAbility (String label, int healthMin, int healthMax, float attackChance) {
+            this.label = label;
+            healthRange[0] = healthMin;
+            healthRange[1] = healthMax;
+            this.attackChance = attackChance;
+        }
+
+        EnemyAbility combine(EnemyAbility target) {
+            return new EnemyAbility(
+                    label + " " + target.label,
+                    healthRange[0] + target.healthRange[0],
+                    healthRange[1] + target.healthRange[1],
+                    attackChance * target.attackChance);
+        }
+
+        int getHealth(int level) {
+            int health = EntityFactory.rnd.nextInt(healthRange[0], healthRange[1]);
+            return health + (int) (health * (level-1) * 0.1);
+        }
+
+    }
 
 
     static class ArmorAbility {
@@ -261,7 +287,7 @@ public class EntityFactory {
 
     };
 
-    private Storage storage = Storage.getInstance();
+    private final Storage storage = Storage.getInstance();
 
     private static final int WEAPON_CHANCE = 50;
     private static final int ENEMY_CHANCE = 80;
@@ -297,6 +323,7 @@ public class EntityFactory {
     public Armor createArmor(int level) {
         Armor armor = newArmor();
         storage.addNewEntity(armor);
+        armor.setLevel(level);
         ArmorAbility ability = armorAbilities[rnd.nextInt(armorAbilities.length)];
         String material = armorMaterials[rnd.nextInt(armorMaterials.length)];
         armor.setTitle(ability.description + " " + material + " armor");
@@ -357,7 +384,11 @@ public class EntityFactory {
     public Enemy createEnemy(int level) {
         Enemy enemy = newEnemy(level);
         storage.addNewEntity(enemy);
-        enemy.setTitle("LVL " + level + " " + enemyDescriptors[rnd.nextInt(enemyDescriptors.length)] + " " + enemyNames[rnd.nextInt(enemyNames.length)]);
+        EnemyAbility ability = enemyDescriptors[rnd.nextInt(enemyDescriptors.length)]
+                .combine(enemyNames[rnd.nextInt(enemyNames.length)]);
+        enemy.setTitle("LVL " + level + " " + ability.label);
+        enemy.setHealth(ability.getHealth(level));
+        enemy.setAttackChance(ability.attackChance);
         enemy.getInventory().addItem(createWeapon(level));
         enemy.setArmor(createArmor(level));
         return enemy;

@@ -111,7 +111,7 @@ public class Player extends EntityClass implements Character {
 
     private void levelUp() {
         while (getXP() >= getLevelThreshold()) {
-            health += (int) (INITIAL_HEALTH * level * 0.1);
+            setHealth(INITIAL_HEALTH, level);
             UserInterface.strike();
             UserInterface.slowPrint("LEVEL UP!!! YOU ARE NOW LEVEL " + ++level + "\n");
             UserInterface.strike();
@@ -208,13 +208,16 @@ public class Player extends EntityClass implements Character {
             Place place = getCurrentPlace();
             inventory.dropAll(place);
             getArmor().drop(place);
+            setArmor(0);
+            world.onPlayerDeath();
             return true;
         }
         return false;
     }
 
     public void resurrect(Place place) {
-        setHealth(INITIAL_HEALTH);
+        setXP(0);
+        setHealth(INITIAL_HEALTH, level);
         setCurrentPlace(place);
     }
 
@@ -236,6 +239,10 @@ public class Player extends EntityClass implements Character {
     @Override
     public void setHealth(int health) {
         this.health = health;
+    }
+
+    public void setHealth(int health, int level) {
+        setHealth(Math.max(health, getHealth()) + (int) (health * level * 0.1));
     }
 
     public void printState() {

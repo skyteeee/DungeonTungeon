@@ -67,6 +67,10 @@ public class Place extends EntityClass {
         return Storage.getInstance().getEnemy(enemies.get(index));
     }
 
+    public int getEnemyAmount() {
+        return enemies.size();
+    }
+
     public void removeEnemy(Enemy enemy) {
         enemies.remove((Integer) enemy.getId());
     }

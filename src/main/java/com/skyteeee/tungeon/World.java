@@ -1,5 +1,6 @@
 package com.skyteeee.tungeon;
 
+import com.skyteeee.tungeon.entities.Enemy;
 import com.skyteeee.tungeon.entities.Path;
 import com.skyteeee.tungeon.entities.Place;
 import com.skyteeee.tungeon.entities.Player;
@@ -56,18 +57,29 @@ public class World implements GameObject, Savable {
 
     public void attack(int enemyIdx, UserInterface ui) {
         player.attack(enemyIdx, ui);
-        if (player.isDead()) {
-            player.resurrect(getSpawn());
-        }
+    }
+
+    public void onPlayerDeath() {
+        player.resurrect(getSpawn());
     }
 
     public boolean move(int choice) {
         Place place = player.getCurrentPlace();
         Path path = place.getPath(choice-1);
         if (path != null) {
-            Place destination = path.getDestination(place);
-            path.addVisitor(player);
-            player.setCurrentPlace(destination);
+            boolean attacked = false;
+            for (int i = 0; i < place.getEnemyAmount(); i++) {
+                Enemy enemy = place.getEnemy(i);
+                if (enemy.willAttack()) {
+                    enemy.attack(player, null);
+                    attacked = true;
+                }
+            }
+            if (!attacked) {
+                Place destination = path.getDestination(place);
+                path.addVisitor(player);
+                player.setCurrentPlace(destination);
+            }
             return true;
         }
         return false;

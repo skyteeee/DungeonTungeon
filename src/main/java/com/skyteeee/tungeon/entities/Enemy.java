@@ -18,13 +18,13 @@ public class Enemy extends EntityClass implements Character{
     private int level = 1;
 
     private static final int INITIAL_HEALTH = 100;
-    private int health = INITIAL_HEALTH;
+    private float attackChance;
+    private int health;
 
     public Enemy(int level) {
         this.level = level;
-        health = INITIAL_HEALTH + (int) (INITIAL_HEALTH * (level-1) * 0.1);
+        health = INITIAL_HEALTH;
     }
-
     @Override
     public void setCurrentPlace(int id) {
 
@@ -57,6 +57,14 @@ public class Enemy extends EntityClass implements Character{
 
     public void setArmor(int id) {
         currentArmor = id;
+    }
+
+    public void setAttackChance(float chance) {
+        attackChance = chance;
+    }
+
+    public float getAttackChance() {
+        return attackChance;
     }
 
     @Override
@@ -124,6 +132,10 @@ public class Enemy extends EntityClass implements Character{
         target.defend(this, weapon);
     }
 
+    public boolean willAttack() {
+        return EntityFactory.rnd.nextFloat() < attackChance;
+    }
+
     private boolean checkDeath() {
         if (health <= 0) {
             System.out.println("KILLED: " + title);
@@ -156,6 +168,7 @@ public class Enemy extends EntityClass implements Character{
         object.put("health", getHealth());
         object.put("level", getLevel());
         object.put("armor", getArmorId());
+        object.put("attackChance", getAttackChance());
         return object;
     }
 
@@ -168,6 +181,7 @@ public class Enemy extends EntityClass implements Character{
         inventory.deserialize(object.getJSONObject("inventory"));
         setHealth(object.optInt("health", getHealth()));
         setLevel(object.optInt("level", 1));
+        setAttackChance(object.optFloat("attackChance", 0f));
     }
 
     public String getTitle() {
