@@ -2,8 +2,8 @@ package com.skyteeee.tungeon.entities.items;
 
 import com.skyteeee.tungeon.entities.EntityClass;
 import com.skyteeee.tungeon.entities.Place;
-import com.skyteeee.tungeon.entities.Player;
 import com.skyteeee.tungeon.utils.EntityFactory;
+import com.skyteeee.tungeon.utils.UserInterface;
 import org.json.JSONObject;
 
 public class Weapon extends EntityClass implements Item{
@@ -11,13 +11,25 @@ public class Weapon extends EntityClass implements Item{
     private int damage;
     private float dropChance;
     private int level;
+    private float durability = 1;
+    private float resistance = 1;
+
+    public static final Weapon BARE_HANDS = new Weapon();
+    static {
+        BARE_HANDS.setTitle("bear hands");
+        BARE_HANDS.setDamage(2);
+        BARE_HANDS.setDurability(100);
+        BARE_HANDS.setResistance(1f);
+        BARE_HANDS.setDropChance(0f);
+        BARE_HANDS.setLevel(1);
+    }
 
     @Override
     public String getTitle() {
         return getTitle(false);
     }
     public String getTitle(boolean raw) {
-        return raw ? title : title + " " + level;
+        return raw ? title : title + " " + level + " | Durability: " + UserInterface.floor(durability, 1);
     }
 
     @Override
@@ -39,6 +51,33 @@ public class Weapon extends EntityClass implements Item{
 
     public int getDamage() {
         return damage;
+    }
+
+    @Override
+    public void setDurability(float durability) {
+        this.durability = durability;
+    }
+
+    @Override
+    public float getDurability() {
+        return durability;
+    }
+
+    @Override
+    public void setResistance(float resistance) {
+        this.resistance = resistance;
+    }
+
+    @Override
+    public float getResistance() {
+        return resistance;
+    }
+
+    @Override
+    public void applyDamage(int damage) {
+        float ourDamage = damage * 0.5f;
+        float durabilityLost = (1-getResistance()) * ourDamage;
+        setDurability(getDurability()-durabilityLost);
     }
 
     @Override
@@ -65,6 +104,8 @@ public class Weapon extends EntityClass implements Item{
         object.put("level", getLevel());
         object.put("title", getTitle(true));
         object.put("damage", getDamage());
+        object.put("durability", getDurability());
+        object.put("resistance", getResistance());
         object.put("dropChance", getDropChance());
         return object;
     }
@@ -76,5 +117,7 @@ public class Weapon extends EntityClass implements Item{
         setLevel(object.optInt("level", 1));
         setDamage(object.getInt("damage"));
         setDropChance(object.getFloat("dropChance"));
+        setDurability(object.optFloat("durability", 1f));
+        setResistance(object.optFloat("resistance", 1f));
     }
 }

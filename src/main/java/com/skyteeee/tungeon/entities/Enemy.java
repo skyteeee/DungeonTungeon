@@ -93,7 +93,14 @@ public class Enemy extends EntityClass implements Character{
     }
 
     public void printState() {
-        System.out.println(title + " holding a " + inventory.getItem(weaponIdx).getTitle() + "; it is wearing " + getArmor().getShortTitle());
+        System.out.print(title + " ");
+        if (weaponIdx != -1) {
+            System.out.print("holding a " + inventory.getItem(weaponIdx).getTitle());
+        }
+        if (currentArmor != 0) {
+            System.out.print("; it is wearing " + getArmor().getShortTitle());
+        }
+        System.out.println();
     }
 
     private int xpOnDeath(Character killer) {
@@ -108,10 +115,17 @@ public class Enemy extends EntityClass implements Character{
             damage = weapon.getDamage();
         } else {
             Armor armor = getArmor();
+            armor.applyDamage(weapon.getDamage());
             damage = (int)(weapon.getDamage() * armor.getAbsorption()) - armor.getDefence();
+            if (armor.getDurability() <= 0) {
+                Storage.getInstance().removeEntity(armor);
+                currentArmor = 0;
+                UserInterface.slowPrint(title + "'s " + armor.getShortTitle() + " broke.");
+            }
         }
-        damage = Math.max(damage, 0);
+        damage = Math.max(damage, 5);
         health -= damage;
+        weapon.applyDamage(weapon.getDamage());
         UserInterface.slowPrint("Dealt " + damage + " damage. ");
         if (!checkDeath()) {
             UserInterface.slowPrint(getTitle() + " has survived your attack. It has " + health + " health remaining. \n");
@@ -126,10 +140,19 @@ public class Enemy extends EntityClass implements Character{
     @Override
     public void attack(Character target, Weapon weapon) {
         if (weapon == null) {
-            weapon = (Weapon) inventory.getItem(weaponIdx);
+            if (weaponIdx != -1) {
+                weapon = (Weapon) inventory.getItem(weaponIdx);
+            } else {
+                weapon = Weapon.BARE_HANDS;
+            }
         }
         UserInterface.slowPrint(getTitle() + " attacks " + target.getTitle() + " with " + weapon.getTitle() + ". \n");
         target.defend(this, weapon);
+        if (weaponIdx != -1 && weapon.getDurability() <= 0) {
+            inventory.removeItem(weapon);
+            weaponIdx = -1;
+            System.out.println(title + "'s " + weapon.getTitle() + " broke.");
+        }
     }
 
     public boolean willAttack() {

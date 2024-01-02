@@ -207,14 +207,18 @@ public class EntityFactory {
         int[] defenceRange = new int[2];
         float[] absorptionRange = new float[2];
         float dropChance;
+        float durability;
+        float resistance;
 
-        ArmorAbility(String description, int defMin, int defMax, float absMin, float absMax, float dropChance) {
+        ArmorAbility(String description, int defMin, int defMax, float absMin, float absMax, float dropChance, float resistance, float durability) {
             this.description = description;
             defenceRange[0] = defMin;
             defenceRange[1] = defMax;
             absorptionRange[0] = absMin;
             absorptionRange[1] = absMax;
             this.dropChance = dropChance;
+            this.durability = durability;
+            this.resistance = resistance;
         }
 
         int getDefence(Random rnd, int level) {
@@ -227,6 +231,10 @@ public class EntityFactory {
             return initAbs - (initAbs * level * 0.0791f);
         }
 
+        float getDurability(int level) {
+            return durability + (durability * level * 0.12f);
+        }
+
     }
 
     static class WeaponAbility {
@@ -235,13 +243,16 @@ public class EntityFactory {
 
         int[] damageRange = new int[2];
         float dropChance;
+        float durability;
+        float resistance;
 
-        WeaponAbility(String desc, int dmgMin, int dmgMax, float dropChance) {
+        WeaponAbility(String desc, int dmgMin, int dmgMax, float dropChance, float resistance, float durability) {
             description = desc;
             damageRange[0] = dmgMin;
             damageRange[1] = dmgMax;
             this.dropChance = dropChance;
-
+            this.resistance = resistance;
+            this.durability = durability;
         }
 
         int getDamage(Random rnd, int level) {
@@ -250,12 +261,16 @@ public class EntityFactory {
             return damage;
         }
 
+        float getDurability(int level) {
+            return durability + (durability * level * 0.1119f);
+        }
+
     }
 
     static class CursedAbility extends WeaponAbility {
 
         CursedAbility(String desc, int dmgMin, int dmgMax, float dropChance) {
-            super(desc, dmgMin, dmgMax, dropChance);
+            super(desc, dmgMin, dmgMax, dropChance, 0.7f, 200);
         }
 
         @Override
@@ -271,19 +286,19 @@ public class EntityFactory {
     }
 
     static WeaponAbility[] weaponAbilities = new WeaponAbility[] {
-            new WeaponAbility("weak", 1, 30, 0.2f),
-            new WeaponAbility("mysterious", 5, 250, 0.6f),
-            new WeaponAbility("strong", 25, 100, 0.4f),
-            new WeaponAbility("great", 50, 150, 0.5f),
+            new WeaponAbility("weak", 1, 30, 0.2f, 0.8f, 500f),
+            new WeaponAbility("mysterious", 5, 250, 0.6f, 0.75f, 250f),
+            new WeaponAbility("strong", 25, 100, 0.4f, 0.6f, 350f),
+            new WeaponAbility("great", 50, 150, 0.5f, 0.4f, 600f),
             new CursedAbility("cursed", 6, 6, 1f)
     };
 
     static ArmorAbility[] armorAbilities = new ArmorAbility[] {
-            new ArmorAbility("rusty", 1, 3, 0.95f, 1.0f, 0.2f),
-            new ArmorAbility("thin", 2, 7, 0.9f, 1.0f, 0.2f),
-            new ArmorAbility("glorious", 10, 25, 0.75f, 0.9f, 0.3f),
-            new ArmorAbility("polished", 10, 35, 0.5f, 0.8f, 0.5f),
-            new ArmorAbility("legendary", 30, 100, 0.5f, 0.8f, 0.5f),
+            new ArmorAbility("rusty", 1, 3, 0.95f, 1.0f, 0.2f, 0.3f, 300),
+            new ArmorAbility("thin", 2, 7, 0.9f, 1.0f, 0.2f, 0.4f, 350),
+            new ArmorAbility("glorious", 10, 25, 0.75f, 0.9f, 0.3f, 0.59f, 300),
+            new ArmorAbility("polished", 10, 35, 0.5f, 0.8f, 0.5f, 0.5f, 350),
+            new ArmorAbility("legendary", 30, 100, 0.5f, 0.8f, 0.5f, 0.45f, 400),
 
     };
 
@@ -301,6 +316,8 @@ public class EntityFactory {
         String color = colors[rnd.nextInt(colors.length)];
         weapon.setTitle(ability.description + " " + color + " " + type);
         weapon.setDamage(ability.getDamage(rnd, level));
+        weapon.setDurability(ability.getDurability(level));
+        weapon.setResistance(ability.resistance);
         weapon.setDropChance(ability.dropChance);
         weapon.setLevel(level);
         return weapon;
@@ -329,6 +346,8 @@ public class EntityFactory {
         armor.setTitle(ability.description + " " + material + " armor");
         armor.setDefence(ability.getDefence(rnd, level));
         armor.setAbsorption(ability.getAbsorption(rnd, level));
+        armor.setDurability(ability.getDurability(level));
+        armor.setResistance(ability.resistance);
         armor.setDropChance(ability.dropChance);
         return armor;
     }

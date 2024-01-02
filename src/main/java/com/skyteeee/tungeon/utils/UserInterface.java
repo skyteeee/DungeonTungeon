@@ -16,6 +16,10 @@ public class UserInterface {
 
     private static final String INVALID_OPTION_MESSAGE = "Sorry, please type in a valid option.";
 
+    public static float floor(float num, int e) {
+        return (float)((int)(num * Math.pow(10, e)) / Math.pow(10,e));
+    }
+
     public static void strike() {
         System.out.println("-----");
     }

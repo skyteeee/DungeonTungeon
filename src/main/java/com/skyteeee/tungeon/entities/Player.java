@@ -6,9 +6,7 @@ import com.skyteeee.tungeon.entities.items.Item;
 import com.skyteeee.tungeon.entities.items.Weapon;
 import com.skyteeee.tungeon.storage.Inventory;
 import com.skyteeee.tungeon.storage.Storage;
-import com.skyteeee.tungeon.utils.EntityFactory;
 import com.skyteeee.tungeon.utils.UserInterface;
-import com.sun.source.tree.WhileLoopTree;
 import org.json.JSONObject;
 
 public class Player extends EntityClass implements Character {
@@ -156,8 +154,8 @@ public class Player extends EntityClass implements Character {
     public void attack(int enemyIdx, UserInterface ui) {
         Enemy enemy = getCurrentPlace().getEnemy(enemyIdx);
         if (inventory.isEmpty() || noWeapons()) {
-            System.out.println("As you leap towards the enemy, you realize that you lack any weapons. It is too late to turn away now. ");
-            enemy.attack(this, null);
+            System.out.println("As you leap towards the enemy, you realize that you lack any weapons. It is too late to turn away now. You attack it with your bare hands");
+            enemy.attack(this, Weapon.BARE_HANDS);
         } else {
             System.out.println("You have the following items: ");
             inventory.printState(true);
@@ -174,6 +172,11 @@ public class Player extends EntityClass implements Character {
     public void attack(Character target, Weapon weapon) {
         UserInterface.slowPrint("Attacking " + target.getTitle() + "\n");
         target.defend(this, weapon);
+        if (weapon.getDurability() <= 0) {
+            UserInterface.slowPrint("Unfortunately, you have lost your faithful " + weapon.getTitle() + ". It broke after delivering its final blow.");
+            Storage.getInstance().removeEntity(weapon);
+            inventory.removeItem(weapon);
+        }
     }
 
     @Override
@@ -183,10 +186,18 @@ public class Player extends EntityClass implements Character {
             damage = weapon.getDamage();
         } else {
             Armor armor = getArmor();
+            armor.applyDamage(weapon.getDamage());
             damage = (int)(weapon.getDamage() * armor.getAbsorption()) - armor.getDefence();
+            if (armor.getDurability() <= 0) {
+                UserInterface.slowPrint("You lost your " + armor.getShortTitle() + ". It broke after you were attacked.");
+                currentArmor = 0;
+                Storage.getInstance().removeEntity(armor);
+            }
+
         }
-        damage = Math.max(damage, 0);
+        damage = Math.max(damage, 5);
         health -= damage;
+        weapon.applyDamage(weapon.getDamage());
         if (!checkDeath()) {
             UserInterface.slowPrint("You stood your ground and survived the vicious attack. \n" +
                     "You have " + getHealth() + " health remaining.\n");
