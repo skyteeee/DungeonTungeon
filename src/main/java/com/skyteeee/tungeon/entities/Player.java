@@ -38,10 +38,10 @@ public class Player extends EntityClass implements Character {
 
     public boolean equipArmor(int invIdx) {
         if (inventory.getItem(invIdx) instanceof Armor armor) {
+            inventory.removeItem(armor);
             if (currentArmor != 0) {
-                getCurrentPlace().take(getArmor());
-                UserInterface.slowPrint("You dropped " + getArmor().getTitle() + "\n");
-                inventory.removeItem(armor);
+                inventory.addItem(getArmor());
+                UserInterface.slowPrint("You took off " + getArmor().getTitle() + "\n");
             }
             setArmor(armor);
             UserInterface.slowPrint("You equipped " + armor.getTitle() + "\n");
@@ -155,7 +155,7 @@ public class Player extends EntityClass implements Character {
         Enemy enemy = getCurrentPlace().getEnemy(enemyIdx);
         if (inventory.isEmpty() || noWeapons()) {
             System.out.println("As you leap towards the enemy, you realize that you lack any weapons. It is too late to turn away now. You attack it with your bare hands");
-            enemy.attack(this, Weapon.BARE_HANDS);
+            attack(enemy, Weapon.BARE_HANDS);
         } else {
             System.out.println("You have the following items: ");
             inventory.printState(true);

@@ -180,6 +180,7 @@ public class WorldFactory {
         worldObject.put("weapons", weaponsArray);
         worldObject.put("enemies", enemiesArray);
         worldObject.put("armor", armorArray);
+        worldObject.put("turn", storage.getTurn());
 
         saveObject.put("world", worldObject);
         String toSave = saveObject.toString(2);
@@ -228,6 +229,7 @@ public class WorldFactory {
         JSONArray weaponsArray = worldObject.getJSONArray("weapons");
         JSONArray enemiesArray = worldObject.optJSONArray("enemies", new JSONArray());
         JSONArray armorArray = worldObject.optJSONArray("armor", new JSONArray());
+        storage.setTurn(worldObject.optInt("turn", 0));
 
         for (int i = 0; i < enemiesArray.length(); i++) {
             JSONObject enemyObject = enemiesArray.getJSONObject(i);

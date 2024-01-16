@@ -17,6 +17,8 @@ public class Storage {
 
     int nextId = 1;
 
+    int turn = 0;
+
     Map<Integer, Entity> entities = new HashMap<>();
 
     public void putEntity(Entity entity) {
@@ -28,6 +30,10 @@ public class Storage {
         if (id > nextId - 1) {
             nextId = id + 1;
         }
+    }
+
+    public int getTurn() {
+        return turn;
     }
 
     public Entity getEntity(int id) {
@@ -56,6 +62,18 @@ public class Storage {
     public void clear() {
         entities = new HashMap<>();
         nextId = 1;
+    }
+
+    public void nextTurn() {
+        turn++;
+    }
+
+    public void resetTurn() {
+        turn = 0;
+    }
+
+    public void setTurn(int turn) {
+        this.turn = turn;
     }
 
     public Collection<Entity> getAllEntities() {

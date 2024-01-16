@@ -9,6 +9,8 @@ import com.skyteeee.tungeon.utils.EntityFactory;
 import com.skyteeee.tungeon.utils.UserInterface;
 import org.json.JSONObject;
 
+import java.util.List;
+
 public class Enemy extends EntityClass implements Character{
     private int currentPlaceId;
     private Inventory inventory = new Inventory();
@@ -72,6 +74,10 @@ public class Enemy extends EntityClass implements Character{
         return inventory;
     }
 
+    public Weapon getCurrentWeapon() {
+        return (Weapon) getInventory().getItem(weaponIdx);
+    }
+
     @Override
     public void take(int choice) {
 
@@ -129,7 +135,9 @@ public class Enemy extends EntityClass implements Character{
         UserInterface.slowPrint("Dealt " + damage + " damage. ");
         if (!checkDeath()) {
             UserInterface.slowPrint(getTitle() + " has survived your attack. It has " + health + " health remaining. \n");
-            attack(attacker, (Weapon) inventory.getItem(weaponIdx));
+            int currentTurn = Storage.getInstance().getTurn();
+            attack(attacker, getCurrentWeapon());
+            alertHoard(attacker, currentTurn);
         } else {
             if (attacker instanceof Player player) {
                 player.addXP(xpOnDeath(attacker));
@@ -137,11 +145,27 @@ public class Enemy extends EntityClass implements Character{
         }
     }
 
+    public void callToArms(Character aggressor) {
+        if (aggressor.getLevel() < getLevel()
+                || (aggressor.getLevel() == getLevel()
+                    && EntityFactory.rnd.nextFloat() >= 0.3f)) {
+            attack(aggressor, getCurrentWeapon());
+        }
+    }
+
+    public void alertHoard(Character aggressor, int currentTurn) {
+        Place curentPlace = getCurrentPlace();
+        for (int i = 0; i < curentPlace.getEnemyAmount(); i++) {
+            Enemy dude = curentPlace.getEnemy(i);
+            if (dude != this && aggressor.getHealth() > 0 && Storage.getInstance().getTurn() == currentTurn) dude.callToArms(aggressor);
+        }
+    }
+
     @Override
     public void attack(Character target, Weapon weapon) {
         if (weapon == null) {
             if (weaponIdx != -1) {
-                weapon = (Weapon) inventory.getItem(weaponIdx);
+                weapon = getCurrentWeapon();
             } else {
                 weapon = Weapon.BARE_HANDS;
             }

@@ -2,6 +2,7 @@ package com.skyteeee.tungeon.utils;
 
 import com.skyteeee.tungeon.Main;
 import com.skyteeee.tungeon.World;
+import com.skyteeee.tungeon.storage.Storage;
 
 import java.util.Scanner;
 
@@ -180,6 +181,7 @@ public class UserInterface {
                     break;
 
                     case "/status": {
+                        slowPrint("Turn " + Storage.getInstance().getTurn() + "\n");
                         currentWorld.getPlayer().printState();
                     }
                     break;

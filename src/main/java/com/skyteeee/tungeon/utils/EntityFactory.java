@@ -385,8 +385,10 @@ public class EntityFactory {
         }
 
         if (rnd.nextInt(100) < ENEMY_CHANCE) {
-            Enemy enemy = createEnemy();
-            enemy.setCurrentPlace(place);
+            for (int i = 0; i < 3; i++) {
+                Enemy enemy = createEnemy();
+                enemy.setCurrentPlace(place);
+            }
         }
 
         return place;

@@ -57,10 +57,12 @@ public class World implements GameObject, Savable {
 
     public void attack(int enemyIdx, UserInterface ui) {
         player.attack(enemyIdx, ui);
+        Storage.getInstance().nextTurn();
     }
 
     public void onPlayerDeath() {
         player.resurrect(getSpawn());
+        Storage.getInstance().resetTurn();
     }
 
     public boolean move(int choice) {
@@ -80,6 +82,7 @@ public class World implements GameObject, Savable {
                 path.addVisitor(player);
                 player.setCurrentPlace(destination);
             }
+            Storage.getInstance().nextTurn();
             return true;
         }
         return false;

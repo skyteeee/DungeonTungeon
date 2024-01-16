@@ -8,4 +8,3 @@
 - add random enemy vs enemy encounters?
 - add random enemy movement
 - add different types of enemies (bosses and such)
-- add weapon and armor durability
