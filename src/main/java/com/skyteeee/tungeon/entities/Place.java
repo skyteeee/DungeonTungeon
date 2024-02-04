@@ -15,6 +15,7 @@ public class Place extends EntityClass {
 
     private List<Integer> paths = new ArrayList<>();
     private List<Integer> enemies = new ArrayList<>();
+    private List<Integer> players = new ArrayList<>();
 
     private String description;
     private String title;
@@ -52,7 +53,7 @@ public class Place extends EntityClass {
     }
 
     public Path getPath (int index) {
-        return index < paths.size() && index >= 0 ? Storage.getInstance().getPath(paths.get(index)) : null;
+        return index < paths.size() && index >= 0 ? Storage.getInstance().getOfType(paths.get(index)) : null;
     }
 
     public void addEnemy(Enemy enemy) {
@@ -64,7 +65,7 @@ public class Place extends EntityClass {
     }
 
     public Enemy getEnemy(int index) {
-        return Storage.getInstance().getEnemy(enemies.get(index));
+        return Storage.getInstance().getOfType(enemies.get(index));
     }
 
     public int getEnemyAmount() {
@@ -75,17 +76,43 @@ public class Place extends EntityClass {
         enemies.remove((Integer) enemy.getId());
     }
 
+    public void addPlayer(Player player) {
+        players.add(player.getId());
+    }
+
+    public void addPlayer(int id) {players.add(id);}
+
+    public void removePlayer(Player player) {
+        players.remove((Integer) player.getId());
+    }
+
+    public int getPlayerAmount() {
+        return players.size();
+    }
+
+    public Player getPlayer(int index) {
+        return Storage.getInstance().getOfType(players.get(index));
+    }
+
     @Override
     public JSONObject serialize() {
         JSONObject object = new JSONObject();
         object.put("id", getId());
         object.put("title", getTitle());
         object.put("description", getDescription());
+
         JSONArray enemiesArray = new JSONArray();
         for (int id : enemies) {
             enemiesArray.put(id);
         }
         object.put("enemies", enemiesArray);
+
+        JSONArray playersArray = new JSONArray();
+        for (int id : players) {
+            playersArray.put(id);
+        }
+        object.put("players", playersArray);
+
         JSONArray pathsArray = new JSONArray();
         for (int id : paths) {
             pathsArray.put(id);
@@ -108,6 +135,12 @@ public class Place extends EntityClass {
         for (int i = 0; i < enemiesArray.length(); i++) {
             addEnemy(enemiesArray.getInt(i));
         }
+
+        JSONArray playersArray = object.optJSONArray("players", new JSONArray());
+        for (int i = 0; i < playersArray.length(); i++) {
+            addPlayer(playersArray.getInt(i));
+        }
+
         inventory.deserialize(object.getJSONObject("inventory"));
 
     }

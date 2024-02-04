@@ -229,7 +229,9 @@ public class Player extends EntityClass implements Character {
     public void resurrect(Place place) {
         setXP(0);
         setHealth(INITIAL_HEALTH, level);
+        getCurrentPlace().removePlayer(this);
         setCurrentPlace(place);
+        place.addPlayer(this);
     }
 
     @Override

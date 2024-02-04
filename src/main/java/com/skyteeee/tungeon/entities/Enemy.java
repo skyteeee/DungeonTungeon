@@ -23,6 +23,8 @@ public class Enemy extends EntityClass implements Character{
     private float attackChance;
     private int health;
 
+    private boolean usedTurn = false;
+
     public Enemy(int level) {
         this.level = level;
         health = INITIAL_HEALTH;
@@ -161,6 +163,38 @@ public class Enemy extends EntityClass implements Character{
         }
     }
 
+    public void onTurn() {
+        if (!usedTurn) {
+            Place currentPlace = getCurrentPlace();
+            int enemyAmount = currentPlace.getEnemyAmount();
+            if (enemyAmount == 1 || enemyAmount >= EntityFactory.rnd.nextInt(2, 4)) {
+                moveSomewhere(currentPlace);
+            } else {
+                System.out.println("LOG: Enemy did not move. There are " + enemyAmount + " enemies at " + currentPlace.getId());
+            }
+        }
+        usedTurn = false;
+    }
+
+    private void moveSomewhere(Place currentPlace) {
+        var choices = currentPlace.getDestinations();
+
+        Place destination = choices.get(EntityFactory.rnd.nextInt(choices.size()));
+        /** enemy hunts player
+        for (Place place : choices) {
+            if (place.getPlayerAmount() >= 1) {
+                destination = place;
+                System.out.println("LOG: Enemy moved towards PLAYER!!! Into " + destination.getId());
+                break;
+            }
+        }
+         **/
+        currentPlace.removeEnemy(this);
+        setCurrentPlace(destination);
+        System.out.println("LOG: Enemy " + getTitle() + " moved from " + currentPlace.getId() + " to " + destination.getId() +
+                ". There are now " + destination.getEnemyAmount() + " enemies there.");
+    }
+
     @Override
     public void attack(Character target, Weapon weapon) {
         if (weapon == null) {
@@ -171,6 +205,7 @@ public class Enemy extends EntityClass implements Character{
             }
         }
         UserInterface.slowPrint(getTitle() + " attacks " + target.getTitle() + " with " + weapon.getTitle() + ". \n");
+        usedTurn = true;
         target.defend(this, weapon);
         if (weaponIdx != -1 && weapon.getDurability() <= 0) {
             inventory.removeItem(weapon);

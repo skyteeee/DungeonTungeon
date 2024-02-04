@@ -10,6 +10,7 @@ import com.skyteeee.tungeon.utils.*;
 import org.json.JSONObject;
 
 import java.sql.Struct;
+import java.util.List;
 
 public class World implements GameObject, Savable {
     private Player player;
@@ -46,6 +47,14 @@ public class World implements GameObject, Savable {
         player.getCurrentPlace().printState(player);
     }
 
+    private void nextTurn() {
+        List<Enemy> enemies = Storage.getInstance().getAllEnemies();
+        for (Enemy enemy : enemies) {
+            enemy.onTurn();
+        }
+        Storage.getInstance().nextTurn();
+    }
+
     public void give(int choice) {
         player.take(choice);
     }
@@ -57,7 +66,7 @@ public class World implements GameObject, Savable {
 
     public void attack(int enemyIdx, UserInterface ui) {
         player.attack(enemyIdx, ui);
-        Storage.getInstance().nextTurn();
+        nextTurn();
     }
 
     public void onPlayerDeath() {
@@ -81,8 +90,10 @@ public class World implements GameObject, Savable {
                 Place destination = path.getDestination(place);
                 path.addVisitor(player);
                 player.setCurrentPlace(destination);
+                destination.addPlayer(player);
+                place.removePlayer(player);
             }
-            Storage.getInstance().nextTurn();
+            nextTurn();
             return true;
         }
         return false;
