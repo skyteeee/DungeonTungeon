@@ -53,7 +53,7 @@ public class Place extends EntityClass {
     }
 
     public Path getPath (int index) {
-        return index < paths.size() && index >= 0 ? Storage.getInstance().getOfType(paths.get(index)) : null;
+        return index < paths.size() && index >= 0 ? Storage.getInstance().getOfType(paths.get(index), Path.class) : null;
     }
 
     public void addEnemy(Enemy enemy) {
@@ -65,7 +65,7 @@ public class Place extends EntityClass {
     }
 
     public Enemy getEnemy(int index) {
-        return Storage.getInstance().getOfType(enemies.get(index));
+        return Storage.getInstance().getOfType(enemies.get(index), Enemy.class);
     }
 
     public int getEnemyAmount() {
@@ -91,7 +91,7 @@ public class Place extends EntityClass {
     }
 
     public Player getPlayer(int index) {
-        return Storage.getInstance().getOfType(players.get(index));
+        return Storage.getInstance().getOfType(players.get(index), Player.class);
     }
 
     @Override

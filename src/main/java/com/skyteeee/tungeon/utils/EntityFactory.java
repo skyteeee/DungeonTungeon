@@ -324,7 +324,7 @@ public class EntityFactory {
     }
 
     public void scatterWeapons(int amount, int level, Place exclude) {
-        List<Place> places = storage.getAllPlaces();
+        List<Place> places = storage.getAllOfType(Place.class);
         places.remove(exclude);
         for (int i = 0; i < amount; i++) {
             Weapon weapon = createWeapon(level);
@@ -353,7 +353,7 @@ public class EntityFactory {
     }
 
     public void scatterArmor(int amount, int level, Place exclude) {
-        List<Place> places = storage.getAllPlaces();
+        List<Place> places = storage.getAllOfType(Place.class);
         places.remove(exclude);
         for (int i = 0; i < amount; i++) {
             Armor armor = createArmor(level);
@@ -416,7 +416,7 @@ public class EntityFactory {
     }
 
     public void scatterEnemies(int amount, int level, Place exclude) {
-        List<Place> places = storage.getAllPlaces();
+        List<Place> places = storage.getAllOfType(Place.class);
         places.remove(exclude);
         for (int i = 0; i < amount; i++) {
             Enemy enemy = createEnemy(level);

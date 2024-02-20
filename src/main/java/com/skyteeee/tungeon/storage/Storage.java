@@ -33,8 +33,8 @@ public class Storage {
         return turn;
     }
 
-    public <T extends Entity> T getOfType(int id) {
-        return (T) getEntity(id);
+    public <T extends Entity> T getOfType(int id, Class<T> klass) {
+        return klass.cast(getEntity(id));
     }
 
     public Entity getEntity(int id) {
@@ -81,39 +81,16 @@ public class Storage {
         return entities.values();
     }
 
-    /**
-    public <T extends Entity> List<T> getAllOfType() {
+
+    public <T extends Entity> List<T> getAllOfType(Class<T> klass) {
         Collection<Entity> entities = getAllEntities();
         List<T> objects = new ArrayList<>(entities.size());
         for (Entity entity : entities) {
-            if (entity instanceof T obj) {
-                objects.add(obj);
+            if (klass.isInstance(entity)) {
+                objects.add(klass.cast(entity));
             }
         }
         return objects;
-    }
-     **/
-
-    public List<Place> getAllPlaces() {
-        Collection<Entity> entities = getAllEntities();
-        List<Place> places = new ArrayList<>(entities.size());
-        for (Entity entity : entities) {
-            if (entity instanceof Place place) {
-                places.add(place);
-            }
-        }
-        return places;
-    }
-
-    public List<Enemy> getAllEnemies() {
-        Collection<Entity> entities = getAllEntities();
-        List<Enemy> enemies = new ArrayList<>(entities.size());
-        for (Entity entity : entities) {
-            if (entity instanceof Enemy enemy) {
-                enemies.add(enemy);
-            }
-        }
-        return enemies;
     }
 
     public void removeEntity(Entity entity) {

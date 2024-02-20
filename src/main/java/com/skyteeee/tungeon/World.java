@@ -48,9 +48,14 @@ public class World implements GameObject, Savable {
     }
 
     private void nextTurn() {
-        List<Enemy> enemies = Storage.getInstance().getAllEnemies();
+        Storage instance = Storage.getInstance();
+        List<Enemy> enemies = instance.getAllOfType(Enemy.class);
+        List<Player> players = instance.getAllOfType(Player.class);
         for (Enemy enemy : enemies) {
             enemy.onTurn();
+        }
+        for (Player playa : players) {
+            playa.onTurn();
         }
         Storage.getInstance().nextTurn();
     }

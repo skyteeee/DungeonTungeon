@@ -14,9 +14,11 @@ public class Player extends EntityClass implements Character {
     private int currentArmor;
     private final Inventory inventory = new Inventory();
     private static final int INITIAL_HEALTH = 250;
+    private int baseHealth = INITIAL_HEALTH;
     private int health = INITIAL_HEALTH;
     private int level = 1;
     private int xp = 0;
+    private int turnsSinceDamaged = 0;
     private World world;
     private String title = "Player 1";
     @Override
@@ -62,6 +64,14 @@ public class Player extends EntityClass implements Character {
         currentArmor = id;
     }
 
+    public int getTurnsSinceDamaged() {
+        return turnsSinceDamaged;
+    }
+
+    public void setTurnsSinceDamaged(int turns) {
+        turnsSinceDamaged = turns;
+    }
+
     @Override
     public void take(int choice) {
         Item item = getCurrentPlace().give(choice);
@@ -78,6 +88,21 @@ public class Player extends EntityClass implements Character {
         inventory.removeItem(item);
         System.out.println("You dropped a " + item.getTitle());
         return item;
+    }
+
+    public void onTurn() {
+        turnsSinceDamaged++;
+        if (turnsSinceDamaged > 3) {
+            selfHeal();
+        }
+    }
+
+    private void selfHeal() {
+        int amountToHeal = baseHealth - getHealth();
+        if (amountToHeal > 0) {
+            int healthToAdd = baseHealth/20 + amountToHeal/10;
+            setHealth(Math.min(health + healthToAdd, baseHealth));
+        }
     }
 
     @Override
@@ -197,6 +222,7 @@ public class Player extends EntityClass implements Character {
         }
         damage = Math.max(damage, 5);
         health -= damage;
+        setTurnsSinceDamaged(0);
         weapon.applyDamage(weapon.getDamage());
         if (!checkDeath()) {
             UserInterface.slowPrint("You stood your ground and survived the vicious attack. \n" +
@@ -255,7 +281,8 @@ public class Player extends EntityClass implements Character {
     }
 
     public void setHealth(int health, int level) {
-        setHealth(Math.max(health, getHealth()) + (int) (health * level * 0.1));
+        baseHealth = Math.max(health, getHealth()) + (int) (health * level * 0.1);
+        setHealth(baseHealth);
     }
 
     public void printState() {
@@ -272,6 +299,7 @@ public class Player extends EntityClass implements Character {
         object.put("level", getLevel());
         object.put("xp", getXP());
         object.put("armor", getArmorId());
+        object.put("turnsSinceDamaged", getTurnsSinceDamaged());
         return object;
     }
 
@@ -284,5 +312,6 @@ public class Player extends EntityClass implements Character {
         setLevel(object.optInt("level", 1));
         setXP(object.optInt("xp", 0));
         setArmor(object.optInt("armor", 0));
+        setTurnsSinceDamaged(object.optInt("turnsSinceDamaged", 0));
     }
 }

@@ -225,6 +225,7 @@ public class Enemy extends EntityClass implements Character{
             Place place = getCurrentPlace();
             getArmor().drop(place);
             place.removeEnemy(this);
+            Storage.getInstance().removeEntity(this);
             return true;
         }
         return false;
