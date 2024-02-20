@@ -300,6 +300,7 @@ public class Player extends EntityClass implements Character {
         object.put("xp", getXP());
         object.put("armor", getArmorId());
         object.put("turnsSinceDamaged", getTurnsSinceDamaged());
+        object.put("baseHealth", baseHealth);
         return object;
     }
 
@@ -313,5 +314,6 @@ public class Player extends EntityClass implements Character {
         setXP(object.optInt("xp", 0));
         setArmor(object.optInt("armor", 0));
         setTurnsSinceDamaged(object.optInt("turnsSinceDamaged", 0));
+        baseHealth = object.optInt("baseHealth", INITIAL_HEALTH);
     }
 }

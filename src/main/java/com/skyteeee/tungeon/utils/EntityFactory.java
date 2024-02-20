@@ -5,11 +5,16 @@ import com.skyteeee.tungeon.entities.items.Armor;
 import com.skyteeee.tungeon.entities.items.Weapon;
 import com.skyteeee.tungeon.storage.Storage;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 
 public class EntityFactory {
     public static Random rnd = new Random();
+    private static final float DAMAGE_CONSTANT = 0.112f;
+    private static final float DEFENCE_CONSTANT = 0.07912f;
+    private static final float ABSORPTION_CONSTANT = 0.0791f;
+    private static final float ENEMY_HEALTH_CONSTANT = 0.1f;
     static String[] colors = new String[] {
             "black",
             "white",
@@ -196,7 +201,7 @@ public class EntityFactory {
 
         int getHealth(int level) {
             int health = EntityFactory.rnd.nextInt(healthRange[0], healthRange[1]);
-            return health + (int) (health * (level-1) * 0.1);
+            return health + (int) (health * (level-1) * ENEMY_HEALTH_CONSTANT);
         }
 
     }
@@ -223,12 +228,12 @@ public class EntityFactory {
 
         int getDefence(Random rnd, int level) {
             int initDef = rnd.nextInt(defenceRange[0], defenceRange[1]);
-            return initDef + (int) (initDef * level * 0.07912);
+            return initDef + (int) (initDef * level * DEFENCE_CONSTANT);
         }
 
         float getAbsorption(Random rnd, int level) {
             float initAbs = rnd.nextFloat(absorptionRange[0], absorptionRange[1]);
-            return initAbs - (initAbs * level * 0.0791f);
+            return initAbs - (initAbs * level * ABSORPTION_CONSTANT);
         }
 
         float getDurability(int level) {
@@ -257,7 +262,7 @@ public class EntityFactory {
 
         int getDamage(Random rnd, int level) {
             int initDamage = rnd.nextInt(damageRange[0], damageRange[1]+1);
-            int damage = initDamage + (int) (initDamage * level * 0.112);
+            int damage = initDamage + (int) (initDamage * level * DAMAGE_CONSTANT);
             return damage;
         }
 
@@ -423,6 +428,70 @@ public class EntityFactory {
             Place place = places.get(rnd.nextInt(places.size()));
             enemy.setCurrentPlace(place);
         }
+    }
+
+    public Enemy mergeEnemies(Enemy enemy1, Enemy enemy2) {
+        if (enemy1.getCurrentPlace().getId() != enemy2.getCurrentPlace().getId()) {
+            return null;
+        }
+        int newLevel = enemy1.getLevel() + enemy2.getLevel();
+        Enemy merged = newEnemy(newLevel);
+        storage.addNewEntity(merged);
+
+        // *****DON'T CHANGE*****
+        Enemy oldEnemy = enemy1.getLevel() > enemy2.getLevel()
+                ? enemy1 : enemy2;
+        String[] parts = oldEnemy.getTitle().split(" ");
+        parts[1] = String.valueOf(newLevel);
+        merged.setTitle(String.join(" ", parts));
+        int newHealth = (int)((1 + (oldEnemy.getLevel() - 1) * ENEMY_HEALTH_CONSTANT) * (1 + (newLevel - 1) * ENEMY_HEALTH_CONSTANT) / oldEnemy.getHealth());
+        merged.setHealth(newHealth);
+        merged.setAttackChance(oldEnemy.getAttackChance());
+
+        Weapon oldWeapon = enemy1.getCurrentWeapon().getDamage() > enemy2.getCurrentWeapon().getDamage()
+                ? enemy1.getCurrentWeapon() : enemy2.getCurrentWeapon();
+
+        int newDamage = (int)((1 + oldWeapon.getLevel() * DAMAGE_CONSTANT) * (1 + newLevel * DAMAGE_CONSTANT) / oldWeapon.getDamage());
+        Weapon newWeapon = newWeapon();
+        storage.addNewEntity(newWeapon);
+        newWeapon.setTitle(oldWeapon.getTitle(true));
+        newWeapon.setDurability(oldWeapon.getDurability());
+        newWeapon.setResistance(oldWeapon.getResistance());
+        newWeapon.setDropChance(oldWeapon.getDropChance());
+        newWeapon.setLevel(newLevel);
+        newWeapon.setDamage(newDamage);
+        merged.getInventory().addItem(oldWeapon);
+
+        storage.removeEntity(enemy1.getCurrentWeapon());
+        storage.removeEntity(enemy2.getCurrentWeapon());
+
+        Armor oldArmor = enemy1.getArmor().getAbsorption() < enemy2.getArmor().getAbsorption()
+                ? enemy1.getArmor() : enemy2.getArmor();
+
+        Armor newArmor = newArmor();
+        storage.addNewEntity(newArmor);
+        newArmor.setTitle(oldArmor.getTitle(true));
+        int newDefence = (int)((1 + oldArmor.getLevel() * DEFENCE_CONSTANT) * (1 + newLevel * DEFENCE_CONSTANT) / oldArmor.getDefence());
+        newArmor.setDefence(newDefence);
+        float newAbsorption = (1 + oldArmor.getLevel() * ABSORPTION_CONSTANT) * (1 + newLevel * ABSORPTION_CONSTANT) / oldArmor.getAbsorption();
+        newArmor.setAbsorption(newAbsorption);
+        newArmor.setDurability(oldArmor.getDurability());
+        newArmor.setResistance(oldArmor.getResistance());
+        newArmor.setDropChance(oldArmor.getDropChance());
+        newArmor.setLevel(newLevel);
+        merged.setArmor(newArmor);
+
+        storage.removeEntity(enemy1.getArmor());
+        storage.removeEntity(enemy2.getArmor());
+
+        Place place = enemy2.getCurrentPlace();
+        place.removeEnemy(enemy1);
+        place.removeEnemy(enemy2);
+        place.addEnemy(merged);
+
+        storage.removeEntity(enemy1);
+        storage.removeEntity(enemy2);
+        return merged;
     }
 
     public Enemy newEnemy(int level) {
