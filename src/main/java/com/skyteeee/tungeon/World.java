@@ -41,6 +41,10 @@ public class World implements GameObject, Savable {
         return Storage.getInstance().getPlace(spawnId);
     }
 
+    public EntityFactory getFactory() {
+        return factory;
+    }
+
     public void printState() {
         System.out.println();
         UserInterface.strike();
@@ -52,7 +56,9 @@ public class World implements GameObject, Savable {
         List<Enemy> enemies = instance.getAllOfType(Enemy.class);
         List<Player> players = instance.getAllOfType(Player.class);
         for (Enemy enemy : enemies) {
-            enemy.onTurn();
+            if (instance.getEntity(enemy.getId()) != null) {
+                enemy.onTurn();
+            }
         }
         for (Player playa : players) {
             playa.onTurn();

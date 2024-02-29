@@ -1,5 +1,6 @@
 package com.skyteeee.tungeon.entities;
 
+import com.skyteeee.tungeon.World;
 import com.skyteeee.tungeon.entities.items.Item;
 import com.skyteeee.tungeon.storage.Inventory;
 import com.skyteeee.tungeon.storage.Storage;
@@ -16,6 +17,7 @@ public class Place extends EntityClass {
     private List<Integer> paths = new ArrayList<>();
     private List<Integer> enemies = new ArrayList<>();
     private List<Integer> players = new ArrayList<>();
+    private World world;
 
     private String description;
     private String title;
@@ -92,6 +94,14 @@ public class Place extends EntityClass {
 
     public Player getPlayer(int index) {
         return Storage.getInstance().getOfType(players.get(index), Player.class);
+    }
+
+    public void setWorld(World world) {
+        this.world = world;
+    }
+
+    public World getWorld() {
+        return world;
     }
 
     @Override

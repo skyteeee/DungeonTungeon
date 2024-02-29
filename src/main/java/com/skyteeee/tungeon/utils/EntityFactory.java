@@ -1,5 +1,6 @@
 package com.skyteeee.tungeon.utils;
 
+import com.skyteeee.tungeon.World;
 import com.skyteeee.tungeon.entities.*;
 import com.skyteeee.tungeon.entities.items.Armor;
 import com.skyteeee.tungeon.entities.items.Weapon;
@@ -313,6 +314,10 @@ public class EntityFactory {
     private static final int ENEMY_CHANCE = 80;
     private static final int ARMOR_CHANCE = 40;
 
+    public EntityFactory() {
+
+    }
+
     public Weapon createWeapon(int level) {
         Weapon weapon = newWeapon();
         storage.addNewEntity(weapon);
@@ -372,7 +377,7 @@ public class EntityFactory {
     }
 
 
-    public Place createPlace () {
+    public Place createPlace (World world) {
         Place place = newPlace();
         storage.addNewEntity(place);
         String color = colors[rnd.nextInt(colors.length)];
@@ -381,6 +386,7 @@ public class EntityFactory {
         String descriptor = descriptors[rnd.nextInt(descriptors.length)];
         place.setDescription(size + " " + descriptor + " " + color + " " + terrain);
         place.setTitle(descriptor + " " + terrain);
+        place.setWorld(world);
         if (rnd.nextInt(100) < WEAPON_CHANCE) {
             place.getInventory().addItem(createWeapon(1));
         }
@@ -415,6 +421,7 @@ public class EntityFactory {
         enemy.setTitle("LVL " + level + " " + ability.label);
         enemy.setHealth(ability.getHealth(level));
         enemy.setAttackChance(ability.attackChance);
+        enemy.setMergeChance(rnd.nextFloat(0.01f, 0.1f));
         enemy.getInventory().addItem(createWeapon(level));
         enemy.setArmor(createArmor(level));
         return enemy;
@@ -434,6 +441,20 @@ public class EntityFactory {
         if (enemy1.getCurrentPlace().getId() != enemy2.getCurrentPlace().getId()) {
             return null;
         }
+
+        Place place = enemy2.getCurrentPlace();
+
+        System.out.println("[LOG] merging at place " + place.getId());
+        System.out.println("[LOG] enemy 1: " + enemy1.getTitle());
+        System.out.println("[LOG] enemy 2: " + enemy2.getTitle());
+
+        if (enemy1.getCurrentWeapon() == null) {
+            System.out.println("[ERROR] enemy1 has no weapon");
+        }
+        if (enemy2.getCurrentWeapon() == null) {
+            System.out.println("[ERROR] enemy2 has no weapon");
+        }
+
         int newLevel = enemy1.getLevel() + enemy2.getLevel();
         Enemy merged = newEnemy(newLevel);
         storage.addNewEntity(merged);
@@ -444,14 +465,15 @@ public class EntityFactory {
         String[] parts = oldEnemy.getTitle().split(" ");
         parts[1] = String.valueOf(newLevel);
         merged.setTitle(String.join(" ", parts));
-        int newHealth = (int)((1 + (oldEnemy.getLevel() - 1) * ENEMY_HEALTH_CONSTANT) * (1 + (newLevel - 1) * ENEMY_HEALTH_CONSTANT) / oldEnemy.getHealth());
+        int newHealth = (int)((1 + (newLevel - 1) * ENEMY_HEALTH_CONSTANT) / (1 + (oldEnemy.getLevel() - 1) * ENEMY_HEALTH_CONSTANT) * oldEnemy.getHealth());
         merged.setHealth(newHealth);
+        merged.setMergeChance((enemy2.getMergeChance() + enemy1.getMergeChance()) / 2);
         merged.setAttackChance(oldEnemy.getAttackChance());
 
         Weapon oldWeapon = enemy1.getCurrentWeapon().getDamage() > enemy2.getCurrentWeapon().getDamage()
                 ? enemy1.getCurrentWeapon() : enemy2.getCurrentWeapon();
 
-        int newDamage = (int)((1 + oldWeapon.getLevel() * DAMAGE_CONSTANT) * (1 + newLevel * DAMAGE_CONSTANT) / oldWeapon.getDamage());
+        int newDamage = (int)((1 + newLevel * DAMAGE_CONSTANT) / (1 + oldWeapon.getLevel() * DAMAGE_CONSTANT) * oldWeapon.getDamage());
         Weapon newWeapon = newWeapon();
         storage.addNewEntity(newWeapon);
         newWeapon.setTitle(oldWeapon.getTitle(true));
@@ -460,7 +482,7 @@ public class EntityFactory {
         newWeapon.setDropChance(oldWeapon.getDropChance());
         newWeapon.setLevel(newLevel);
         newWeapon.setDamage(newDamage);
-        merged.getInventory().addItem(oldWeapon);
+        merged.getInventory().addItem(newWeapon);
 
         storage.removeEntity(enemy1.getCurrentWeapon());
         storage.removeEntity(enemy2.getCurrentWeapon());
@@ -471,9 +493,9 @@ public class EntityFactory {
         Armor newArmor = newArmor();
         storage.addNewEntity(newArmor);
         newArmor.setTitle(oldArmor.getTitle(true));
-        int newDefence = (int)((1 + oldArmor.getLevel() * DEFENCE_CONSTANT) * (1 + newLevel * DEFENCE_CONSTANT) / oldArmor.getDefence());
+        int newDefence = (int)((1 + newLevel * DEFENCE_CONSTANT) / (1 + oldArmor.getLevel() * DEFENCE_CONSTANT) * oldArmor.getDefence());
         newArmor.setDefence(newDefence);
-        float newAbsorption = (1 + oldArmor.getLevel() * ABSORPTION_CONSTANT) * (1 + newLevel * ABSORPTION_CONSTANT) / oldArmor.getAbsorption();
+        float newAbsorption = (1 + newLevel * ABSORPTION_CONSTANT) / (1 + oldArmor.getLevel() * ABSORPTION_CONSTANT) * oldArmor.getAbsorption();
         newArmor.setAbsorption(newAbsorption);
         newArmor.setDurability(oldArmor.getDurability());
         newArmor.setResistance(oldArmor.getResistance());
@@ -484,13 +506,14 @@ public class EntityFactory {
         storage.removeEntity(enemy1.getArmor());
         storage.removeEntity(enemy2.getArmor());
 
-        Place place = enemy2.getCurrentPlace();
         place.removeEnemy(enemy1);
         place.removeEnemy(enemy2);
-        place.addEnemy(merged);
+        merged.setCurrentPlace(place);
 
         storage.removeEntity(enemy1);
         storage.removeEntity(enemy2);
+
+        System.out.println("[LOG] merged : " + merged.getTitle());
         return merged;
     }
 

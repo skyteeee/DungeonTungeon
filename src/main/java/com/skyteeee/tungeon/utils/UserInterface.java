@@ -61,6 +61,8 @@ public class UserInterface {
             } catch (Exception exception) {
                 String command = inputScanner.nextLine();
                 if (!processCommand(command)) {
+                    System.out.println("EXCEPTION: " + exception);
+                    exception.printStackTrace();
                     System.out.println(INVALID_OPTION_MESSAGE);
                 } else {
                     break;

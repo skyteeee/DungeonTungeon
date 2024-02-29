@@ -18,6 +18,7 @@ public class Enemy extends EntityClass implements Character{
     private String title;
     private int weaponIdx = 0;
     private int level = 1;
+    private float mergeChance = 0f;
 
     private static final int INITIAL_HEALTH = 100;
     private float attackChance;
@@ -29,6 +30,15 @@ public class Enemy extends EntityClass implements Character{
         this.level = level;
         health = INITIAL_HEALTH;
     }
+
+    public float getMergeChance() {
+        return mergeChance;
+    }
+
+    public void setMergeChance(float chance) {
+        mergeChance = chance;
+    }
+
     @Override
     public void setCurrentPlace(int id) {
 
@@ -191,8 +201,22 @@ public class Enemy extends EntityClass implements Character{
          **/
         currentPlace.removeEnemy(this);
         setCurrentPlace(destination);
-        System.out.println("LOG: Enemy " + getTitle() + " moved from " + currentPlace.getId() + " to " + destination.getId() +
-                ". There are now " + destination.getEnemyAmount() + " enemies there.");
+
+        //MERGE
+        if (EntityFactory.rnd.nextFloat() < mergeChance && destination.getEnemyAmount() > 1
+                && destination.getPlayerAmount() == 0) {
+            int amount = destination.getEnemyAmount();
+            System.out.println("[LOG] attempting merge at " + currentPlaceId);
+            for (int i = 0; i < amount; i++) {
+                Enemy e = destination.getEnemy(i);
+                if (e.getId() != getId()) {
+                    currentPlace.getWorld().getFactory().mergeEnemies(this, e);
+                    break;
+                }
+            }
+        }
+        //System.out.println("LOG: Enemy " + getTitle() + " moved from " + currentPlace.getId() + " to " + destination.getId() +
+        //        ". There are now " + destination.getEnemyAmount() + " enemies there.");
     }
 
     @Override
@@ -209,6 +233,7 @@ public class Enemy extends EntityClass implements Character{
         target.defend(this, weapon);
         if (weaponIdx != -1 && weapon.getDurability() <= 0) {
             inventory.removeItem(weapon);
+            Storage.getInstance().removeEntity(weapon);
             weaponIdx = -1;
             System.out.println(title + "'s " + weapon.getTitle() + " broke.");
         }
@@ -252,6 +277,7 @@ public class Enemy extends EntityClass implements Character{
         object.put("level", getLevel());
         object.put("armor", getArmorId());
         object.put("attackChance", getAttackChance());
+        object.put("mergeChance", getMergeChance());
         return object;
     }
 
@@ -265,6 +291,7 @@ public class Enemy extends EntityClass implements Character{
         setHealth(object.optInt("health", getHealth()));
         setLevel(object.optInt("level", 1));
         setAttackChance(object.optFloat("attackChance", 0f));
+        setMergeChance(object.optFloat("mergeChance", 0f));
     }
 
     public String getTitle() {

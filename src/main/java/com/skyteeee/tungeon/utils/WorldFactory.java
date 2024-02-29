@@ -39,10 +39,11 @@ public class WorldFactory {
      */
     public World generate() {
 
+        World world = newWorld();
         int newPlaceChance = 70;
 
         storage.clear();
-        Place first = createPlace();
+        Place first = createPlace(world);
         while (allPlaces.size() < totalPlaces) {
             Place current;
             int newPaths;
@@ -72,14 +73,14 @@ public class WorldFactory {
                     boolean needNewPlace = forceNewPlace || availPlaces.isEmpty() || EntityFactory.rnd.nextInt(100) <= newPlaceChance;
                     Place destination;
                     if (needNewPlace) {
-                        destination = createPlace();
+                        destination = createPlace(world);
                     } else {
                         List<Place> skip = new LinkedList<>();
                         skip.add(current);
                         skip.addAll(current.getDestinations());
                         destination = getAvailablePlace(skip);
                         if (destination == null) {
-                            destination = createPlace();
+                            destination = createPlace(world);
                         }
                     }
 
@@ -98,7 +99,7 @@ public class WorldFactory {
         }
 
 
-        World world = newWorld();
+
         world.setTotalPlaces(totalPlaces);
         world.setSpawn(first);
         Player player = factory.createPlayer();
@@ -131,8 +132,8 @@ public class WorldFactory {
         }
     }
 
-    private Place createPlace() {
-        Place place = factory.createPlace();
+    private Place createPlace(World world) {
+        Place place = factory.createPlace(world);
         allPlaces.add(place);
         nextPlaces.add(place);
         availPlaces.add(place);
@@ -250,6 +251,7 @@ public class WorldFactory {
             JSONObject placeObject = placesArray.getJSONObject(i);
             Place place = factory.newPlace();
             place.deserialize(placeObject);
+            place.setWorld(world);
             storage.putEntity(place);
         }
 
