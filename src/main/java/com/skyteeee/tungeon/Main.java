@@ -1,5 +1,6 @@
 package com.skyteeee.tungeon;
 
+import com.skyteeee.tungeon.telebot.BotoBatya;
 import com.skyteeee.tungeon.utils.UserInterface;
 import com.skyteeee.tungeon.utils.WorldFactory;
 
@@ -12,6 +13,8 @@ public class Main {
     public static void main(String[] args) {
         WorldFactory worldFactory = new WorldFactory();
         UserInterface userInterface = new UserInterface(worldFactory);
+        BotoBatya batya = new BotoBatya();
+        batya.setup();
         userInterface.initialMessage();
         gameLoop(userInterface);
 

@@ -2,6 +2,10 @@
 
 ## TODO
 
-- add weapon gen chance for balance
-- add not random enemy movement?
-- add random enemy vs enemy encounters?
+- switch to UserInterface output only
+- protect bot by implementing password
+- save whitelisted chat ids in config
+- make base command "bouncer" class
+- implement game commands in telegram bot
+- implement output to telegram bot
+- match chat and game ids
