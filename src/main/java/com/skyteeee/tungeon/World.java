@@ -1,5 +1,6 @@
 package com.skyteeee.tungeon;
 
+import com.skyteeee.tungeon.entities.Enemy;
 import com.skyteeee.tungeon.entities.Path;
 import com.skyteeee.tungeon.entities.Place;
 import com.skyteeee.tungeon.entities.Player;
@@ -9,6 +10,7 @@ import com.skyteeee.tungeon.utils.*;
 import org.json.JSONObject;
 
 import java.sql.Struct;
+import java.util.List;
 
 public class World implements GameObject, Savable {
     private Player player;
@@ -39,10 +41,29 @@ public class World implements GameObject, Savable {
         return Storage.getInstance().getPlace(spawnId);
     }
 
+    public EntityFactory getFactory() {
+        return factory;
+    }
+
     public void printState() {
         System.out.println();
         UserInterface.strike();
         player.getCurrentPlace().printState(player);
+    }
+
+    private void nextTurn() {
+        Storage instance = Storage.getInstance();
+        List<Enemy> enemies = instance.getAllOfType(Enemy.class);
+        List<Player> players = instance.getAllOfType(Player.class);
+        for (Enemy enemy : enemies) {
+            if (instance.getEntity(enemy.getId()) != null) {
+                enemy.onTurn();
+            }
+        }
+        for (Player playa : players) {
+            playa.onTurn();
+        }
+        Storage.getInstance().nextTurn();
     }
 
     public void give(int choice) {
@@ -56,18 +77,34 @@ public class World implements GameObject, Savable {
 
     public void attack(int enemyIdx, UserInterface ui) {
         player.attack(enemyIdx, ui);
-        if (player.isDead()) {
-            player.resurrect(getSpawn());
-        }
+        nextTurn();
+    }
+
+    public void onPlayerDeath() {
+        player.resurrect(getSpawn());
+        Storage.getInstance().resetTurn();
     }
 
     public boolean move(int choice) {
         Place place = player.getCurrentPlace();
         Path path = place.getPath(choice-1);
         if (path != null) {
-            Place destination = path.getDestination(place);
-            path.addVisitor(player);
-            player.setCurrentPlace(destination);
+            boolean attacked = false;
+            for (int i = 0; i < place.getEnemyAmount(); i++) {
+                Enemy enemy = place.getEnemy(i);
+                if (enemy.willAttack()) {
+                    enemy.attack(player, null);
+                    attacked = true;
+                }
+            }
+            if (!attacked) {
+                Place destination = path.getDestination(place);
+                path.addVisitor(player);
+                player.setCurrentPlace(destination);
+                destination.addPlayer(player);
+                place.removePlayer(player);
+            }
+            nextTurn();
             return true;
         }
         return false;

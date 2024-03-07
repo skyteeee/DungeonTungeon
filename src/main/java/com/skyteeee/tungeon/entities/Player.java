@@ -6,9 +6,7 @@ import com.skyteeee.tungeon.entities.items.Item;
 import com.skyteeee.tungeon.entities.items.Weapon;
 import com.skyteeee.tungeon.storage.Inventory;
 import com.skyteeee.tungeon.storage.Storage;
-import com.skyteeee.tungeon.utils.EntityFactory;
 import com.skyteeee.tungeon.utils.UserInterface;
-import com.sun.source.tree.WhileLoopTree;
 import org.json.JSONObject;
 
 public class Player extends EntityClass implements Character {
@@ -16,9 +14,11 @@ public class Player extends EntityClass implements Character {
     private int currentArmor;
     private final Inventory inventory = new Inventory();
     private static final int INITIAL_HEALTH = 250;
+    private int baseHealth = INITIAL_HEALTH;
     private int health = INITIAL_HEALTH;
     private int level = 1;
     private int xp = 0;
+    private int turnsSinceDamaged = 0;
     private World world;
     private String title = "Player 1";
     @Override
@@ -40,10 +40,10 @@ public class Player extends EntityClass implements Character {
 
     public boolean equipArmor(int invIdx) {
         if (inventory.getItem(invIdx) instanceof Armor armor) {
+            inventory.removeItem(armor);
             if (currentArmor != 0) {
-                getCurrentPlace().take(getArmor());
-                UserInterface.slowPrint("You dropped " + getArmor().getTitle() + "\n");
-                inventory.removeItem(armor);
+                inventory.addItem(getArmor());
+                UserInterface.slowPrint("You took off " + getArmor().getTitle() + "\n");
             }
             setArmor(armor);
             UserInterface.slowPrint("You equipped " + armor.getTitle() + "\n");
@@ -64,6 +64,14 @@ public class Player extends EntityClass implements Character {
         currentArmor = id;
     }
 
+    public int getTurnsSinceDamaged() {
+        return turnsSinceDamaged;
+    }
+
+    public void setTurnsSinceDamaged(int turns) {
+        turnsSinceDamaged = turns;
+    }
+
     @Override
     public void take(int choice) {
         Item item = getCurrentPlace().give(choice);
@@ -80,6 +88,21 @@ public class Player extends EntityClass implements Character {
         inventory.removeItem(item);
         System.out.println("You dropped a " + item.getTitle());
         return item;
+    }
+
+    public void onTurn() {
+        turnsSinceDamaged++;
+        if (turnsSinceDamaged > 3) {
+            selfHeal();
+        }
+    }
+
+    private void selfHeal() {
+        int amountToHeal = baseHealth - getHealth();
+        if (amountToHeal > 0) {
+            int healthToAdd = baseHealth/20 + amountToHeal/10;
+            setHealth(Math.min(health + healthToAdd, baseHealth));
+        }
     }
 
     @Override
@@ -111,7 +134,7 @@ public class Player extends EntityClass implements Character {
 
     private void levelUp() {
         while (getXP() >= getLevelThreshold()) {
-            health += (int) (INITIAL_HEALTH * level * 0.1);
+            setHealth(INITIAL_HEALTH, level);
             UserInterface.strike();
             UserInterface.slowPrint("LEVEL UP!!! YOU ARE NOW LEVEL " + ++level + "\n");
             UserInterface.strike();
@@ -156,8 +179,8 @@ public class Player extends EntityClass implements Character {
     public void attack(int enemyIdx, UserInterface ui) {
         Enemy enemy = getCurrentPlace().getEnemy(enemyIdx);
         if (inventory.isEmpty() || noWeapons()) {
-            System.out.println("As you leap towards the enemy, you realize that you lack any weapons. It is too late to turn away now. ");
-            enemy.attack(this, null);
+            System.out.println("As you leap towards the enemy, you realize that you lack any weapons. It is too late to turn away now. You attack it with your bare hands");
+            attack(enemy, Weapon.BARE_HANDS);
         } else {
             System.out.println("You have the following items: ");
             inventory.printState(true);
@@ -174,6 +197,11 @@ public class Player extends EntityClass implements Character {
     public void attack(Character target, Weapon weapon) {
         UserInterface.slowPrint("Attacking " + target.getTitle() + "\n");
         target.defend(this, weapon);
+        if (weapon.getDurability() <= 0) {
+            UserInterface.slowPrint("Unfortunately, you have lost your faithful " + weapon.getTitle() + ". It broke after delivering its final blow.");
+            Storage.getInstance().removeEntity(weapon);
+            inventory.removeItem(weapon);
+        }
     }
 
     @Override
@@ -183,10 +211,19 @@ public class Player extends EntityClass implements Character {
             damage = weapon.getDamage();
         } else {
             Armor armor = getArmor();
+            armor.applyDamage(weapon.getDamage());
             damage = (int)(weapon.getDamage() * armor.getAbsorption()) - armor.getDefence();
+            if (armor.getDurability() <= 0) {
+                UserInterface.slowPrint("You lost your " + armor.getShortTitle() + ". It broke after you were attacked.");
+                currentArmor = 0;
+                Storage.getInstance().removeEntity(armor);
+            }
+
         }
-        damage = Math.max(damage, 0);
+        damage = Math.max(damage, 5);
         health -= damage;
+        setTurnsSinceDamaged(0);
+        weapon.applyDamage(weapon.getDamage());
         if (!checkDeath()) {
             UserInterface.slowPrint("You stood your ground and survived the vicious attack. \n" +
                     "You have " + getHealth() + " health remaining.\n");
@@ -208,14 +245,19 @@ public class Player extends EntityClass implements Character {
             Place place = getCurrentPlace();
             inventory.dropAll(place);
             getArmor().drop(place);
+            setArmor(0);
+            world.onPlayerDeath();
             return true;
         }
         return false;
     }
 
     public void resurrect(Place place) {
-        setHealth(INITIAL_HEALTH);
+        setXP(0);
+        setHealth(INITIAL_HEALTH, level);
+        getCurrentPlace().removePlayer(this);
         setCurrentPlace(place);
+        place.addPlayer(this);
     }
 
     @Override
@@ -238,6 +280,11 @@ public class Player extends EntityClass implements Character {
         this.health = health;
     }
 
+    public void setHealth(int health, int level) {
+        baseHealth = Math.max(health, getHealth()) + (int) (health * level * 0.1);
+        setHealth(baseHealth);
+    }
+
     public void printState() {
         UserInterface.slowPrint(getTitle() + " | health : " + health + " | xp: " + getXP() + "/" + getLevelThreshold() + " | level: " + getLevel() + "\n");
     }
@@ -252,6 +299,8 @@ public class Player extends EntityClass implements Character {
         object.put("level", getLevel());
         object.put("xp", getXP());
         object.put("armor", getArmorId());
+        object.put("turnsSinceDamaged", getTurnsSinceDamaged());
+        object.put("baseHealth", baseHealth);
         return object;
     }
 
@@ -264,5 +313,7 @@ public class Player extends EntityClass implements Character {
         setLevel(object.optInt("level", 1));
         setXP(object.optInt("xp", 0));
         setArmor(object.optInt("armor", 0));
+        setTurnsSinceDamaged(object.optInt("turnsSinceDamaged", 0));
+        baseHealth = object.optInt("baseHealth", INITIAL_HEALTH);
     }
 }

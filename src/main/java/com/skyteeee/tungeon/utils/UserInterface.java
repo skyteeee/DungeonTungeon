@@ -2,6 +2,7 @@ package com.skyteeee.tungeon.utils;
 
 import com.skyteeee.tungeon.Main;
 import com.skyteeee.tungeon.World;
+import com.skyteeee.tungeon.storage.Storage;
 
 import java.util.Scanner;
 
@@ -15,6 +16,10 @@ public class UserInterface {
     }
 
     private static final String INVALID_OPTION_MESSAGE = "Sorry, please type in a valid option.";
+
+    public static float floor(float num, int e) {
+        return (float)((int)(num * Math.pow(10, e)) / Math.pow(10,e));
+    }
 
     public static void strike() {
         System.out.println("-----");
@@ -56,6 +61,8 @@ public class UserInterface {
             } catch (Exception exception) {
                 String command = inputScanner.nextLine();
                 if (!processCommand(command)) {
+                    System.out.println("EXCEPTION: " + exception);
+                    exception.printStackTrace();
                     System.out.println(INVALID_OPTION_MESSAGE);
                 } else {
                     break;
@@ -176,6 +183,7 @@ public class UserInterface {
                     break;
 
                     case "/status": {
+                        slowPrint("Turn " + Storage.getInstance().getTurn() + "\n");
                         currentWorld.getPlayer().printState();
                     }
                     break;

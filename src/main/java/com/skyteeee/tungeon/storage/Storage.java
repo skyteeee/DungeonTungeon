@@ -1,9 +1,6 @@
 package com.skyteeee.tungeon.storage;
 
-import com.skyteeee.tungeon.entities.Enemy;
-import com.skyteeee.tungeon.entities.Entity;
-import com.skyteeee.tungeon.entities.Path;
-import com.skyteeee.tungeon.entities.Place;
+import com.skyteeee.tungeon.entities.*;
 import com.skyteeee.tungeon.entities.items.Item;
 
 import java.util.*;
@@ -17,6 +14,8 @@ public class Storage {
 
     int nextId = 1;
 
+    int turn = 0;
+
     Map<Integer, Entity> entities = new HashMap<>();
 
     public void putEntity(Entity entity) {
@@ -28,6 +27,14 @@ public class Storage {
         if (id > nextId - 1) {
             nextId = id + 1;
         }
+    }
+
+    public int getTurn() {
+        return turn;
+    }
+
+    public <T extends Entity> T getOfType(int id, Class<T> klass) {
+        return klass.cast(getEntity(id));
     }
 
     public Entity getEntity(int id) {
@@ -58,19 +65,32 @@ public class Storage {
         nextId = 1;
     }
 
+    public void nextTurn() {
+        turn++;
+    }
+
+    public void resetTurn() {
+        turn = 0;
+    }
+
+    public void setTurn(int turn) {
+        this.turn = turn;
+    }
+
     public Collection<Entity> getAllEntities() {
         return entities.values();
     }
 
-    public List<Place> getAllPlaces() {
+
+    public <T extends Entity> List<T> getAllOfType(Class<T> klass) {
         Collection<Entity> entities = getAllEntities();
-        List<Place> places = new ArrayList<>(entities.size());
+        List<T> objects = new ArrayList<>(entities.size());
         for (Entity entity : entities) {
-            if (entity instanceof Place place) {
-                places.add(place);
+            if (klass.isInstance(entity)) {
+                objects.add(klass.cast(entity));
             }
         }
-        return places;
+        return objects;
     }
 
     public void removeEntity(Entity entity) {

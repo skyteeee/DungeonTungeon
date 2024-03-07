@@ -9,6 +9,8 @@ import com.skyteeee.tungeon.utils.EntityFactory;
 import com.skyteeee.tungeon.utils.UserInterface;
 import org.json.JSONObject;
 
+import java.util.List;
+
 public class Enemy extends EntityClass implements Character{
     private int currentPlaceId;
     private Inventory inventory = new Inventory();
@@ -16,13 +18,25 @@ public class Enemy extends EntityClass implements Character{
     private String title;
     private int weaponIdx = 0;
     private int level = 1;
+    private float mergeChance = 0f;
 
     private static final int INITIAL_HEALTH = 100;
-    private int health = INITIAL_HEALTH;
+    private float attackChance;
+    private int health;
+
+    private boolean usedTurn = false;
 
     public Enemy(int level) {
         this.level = level;
-        health = INITIAL_HEALTH + (int) (INITIAL_HEALTH * (level-1) * 0.1);
+        health = INITIAL_HEALTH;
+    }
+
+    public float getMergeChance() {
+        return mergeChance;
+    }
+
+    public void setMergeChance(float chance) {
+        mergeChance = chance;
     }
 
     @Override
@@ -59,9 +73,21 @@ public class Enemy extends EntityClass implements Character{
         currentArmor = id;
     }
 
+    public void setAttackChance(float chance) {
+        attackChance = chance;
+    }
+
+    public float getAttackChance() {
+        return attackChance;
+    }
+
     @Override
     public Inventory getInventory() {
         return inventory;
+    }
+
+    public Weapon getCurrentWeapon() {
+        return (Weapon) getInventory().getItem(weaponIdx);
     }
 
     @Override
@@ -85,7 +111,14 @@ public class Enemy extends EntityClass implements Character{
     }
 
     public void printState() {
-        System.out.println(title + " holding a " + inventory.getItem(weaponIdx).getTitle() + "; it is wearing " + getArmor().getShortTitle());
+        System.out.print(title + " ");
+        if (weaponIdx != -1) {
+            System.out.print("holding a " + inventory.getItem(weaponIdx).getTitle());
+        }
+        if (currentArmor != 0) {
+            System.out.print("; it is wearing " + getArmor().getShortTitle());
+        }
+        System.out.println();
     }
 
     private int xpOnDeath(Character killer) {
@@ -100,14 +133,23 @@ public class Enemy extends EntityClass implements Character{
             damage = weapon.getDamage();
         } else {
             Armor armor = getArmor();
+            armor.applyDamage(weapon.getDamage());
             damage = (int)(weapon.getDamage() * armor.getAbsorption()) - armor.getDefence();
+            if (armor.getDurability() <= 0) {
+                Storage.getInstance().removeEntity(armor);
+                currentArmor = 0;
+                UserInterface.slowPrint(title + "'s " + armor.getShortTitle() + " broke.");
+            }
         }
-        damage = Math.max(damage, 0);
+        damage = Math.max(damage, 5);
         health -= damage;
+        weapon.applyDamage(weapon.getDamage());
         UserInterface.slowPrint("Dealt " + damage + " damage. ");
         if (!checkDeath()) {
             UserInterface.slowPrint(getTitle() + " has survived your attack. It has " + health + " health remaining. \n");
-            attack(attacker, (Weapon) inventory.getItem(weaponIdx));
+            int currentTurn = Storage.getInstance().getTurn();
+            attack(attacker, getCurrentWeapon());
+            alertHoard(attacker, currentTurn);
         } else {
             if (attacker instanceof Player player) {
                 player.addXP(xpOnDeath(attacker));
@@ -115,13 +157,90 @@ public class Enemy extends EntityClass implements Character{
         }
     }
 
+    public void callToArms(Character aggressor) {
+        if (aggressor.getLevel() < getLevel()
+                || (aggressor.getLevel() == getLevel()
+                    && EntityFactory.rnd.nextFloat() >= 0.3f)) {
+            attack(aggressor, getCurrentWeapon());
+        }
+    }
+
+    public void alertHoard(Character aggressor, int currentTurn) {
+        Place curentPlace = getCurrentPlace();
+        for (int i = 0; i < curentPlace.getEnemyAmount(); i++) {
+            Enemy dude = curentPlace.getEnemy(i);
+            if (dude != this && aggressor.getHealth() > 0 && Storage.getInstance().getTurn() == currentTurn) dude.callToArms(aggressor);
+        }
+    }
+
+    public void onTurn() {
+        if (!usedTurn) {
+            Place currentPlace = getCurrentPlace();
+            int enemyAmount = currentPlace.getEnemyAmount();
+            if (enemyAmount == 1 || enemyAmount >= EntityFactory.rnd.nextInt(2, 4)) {
+                moveSomewhere(currentPlace);
+            } else {
+                System.out.println("LOG: Enemy did not move. There are " + enemyAmount + " enemies at " + currentPlace.getId());
+            }
+        }
+        usedTurn = false;
+    }
+
+    private void moveSomewhere(Place currentPlace) {
+        var choices = currentPlace.getDestinations();
+
+        Place destination = choices.get(EntityFactory.rnd.nextInt(choices.size()));
+        /** enemy hunts player
+        for (Place place : choices) {
+            if (place.getPlayerAmount() >= 1) {
+                destination = place;
+                System.out.println("LOG: Enemy moved towards PLAYER!!! Into " + destination.getId());
+                break;
+            }
+        }
+         **/
+        currentPlace.removeEnemy(this);
+        setCurrentPlace(destination);
+
+        //MERGE
+        if (EntityFactory.rnd.nextFloat() < mergeChance && destination.getEnemyAmount() > 1
+                && destination.getPlayerAmount() == 0) {
+            int amount = destination.getEnemyAmount();
+            System.out.println("[LOG] attempting merge at " + currentPlaceId);
+            for (int i = 0; i < amount; i++) {
+                Enemy e = destination.getEnemy(i);
+                if (e.getId() != getId()) {
+                    currentPlace.getWorld().getFactory().mergeEnemies(this, e);
+                    break;
+                }
+            }
+        }
+        //System.out.println("LOG: Enemy " + getTitle() + " moved from " + currentPlace.getId() + " to " + destination.getId() +
+        //        ". There are now " + destination.getEnemyAmount() + " enemies there.");
+    }
+
     @Override
     public void attack(Character target, Weapon weapon) {
         if (weapon == null) {
-            weapon = (Weapon) inventory.getItem(weaponIdx);
+            if (weaponIdx != -1) {
+                weapon = getCurrentWeapon();
+            } else {
+                weapon = Weapon.BARE_HANDS;
+            }
         }
         UserInterface.slowPrint(getTitle() + " attacks " + target.getTitle() + " with " + weapon.getTitle() + ". \n");
+        usedTurn = true;
         target.defend(this, weapon);
+        if (weaponIdx != -1 && weapon.getDurability() <= 0) {
+            inventory.removeItem(weapon);
+            Storage.getInstance().removeEntity(weapon);
+            weaponIdx = -1;
+            System.out.println(title + "'s " + weapon.getTitle() + " broke.");
+        }
+    }
+
+    public boolean willAttack() {
+        return EntityFactory.rnd.nextFloat() < attackChance;
     }
 
     private boolean checkDeath() {
@@ -131,6 +250,7 @@ public class Enemy extends EntityClass implements Character{
             Place place = getCurrentPlace();
             getArmor().drop(place);
             place.removeEnemy(this);
+            Storage.getInstance().removeEntity(this);
             return true;
         }
         return false;
@@ -156,6 +276,8 @@ public class Enemy extends EntityClass implements Character{
         object.put("health", getHealth());
         object.put("level", getLevel());
         object.put("armor", getArmorId());
+        object.put("attackChance", getAttackChance());
+        object.put("mergeChance", getMergeChance());
         return object;
     }
 
@@ -168,6 +290,8 @@ public class Enemy extends EntityClass implements Character{
         inventory.deserialize(object.getJSONObject("inventory"));
         setHealth(object.optInt("health", getHealth()));
         setLevel(object.optInt("level", 1));
+        setAttackChance(object.optFloat("attackChance", 0f));
+        setMergeChance(object.optFloat("mergeChance", 0f));
     }
 
     public String getTitle() {

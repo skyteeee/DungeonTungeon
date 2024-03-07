@@ -1,5 +1,6 @@
 package com.skyteeee.tungeon.entities;
 
+import com.skyteeee.tungeon.World;
 import com.skyteeee.tungeon.entities.items.Item;
 import com.skyteeee.tungeon.storage.Inventory;
 import com.skyteeee.tungeon.storage.Storage;
@@ -15,6 +16,8 @@ public class Place extends EntityClass {
 
     private List<Integer> paths = new ArrayList<>();
     private List<Integer> enemies = new ArrayList<>();
+    private List<Integer> players = new ArrayList<>();
+    private World world;
 
     private String description;
     private String title;
@@ -52,7 +55,7 @@ public class Place extends EntityClass {
     }
 
     public Path getPath (int index) {
-        return index < paths.size() && index >= 0 ? Storage.getInstance().getPath(paths.get(index)) : null;
+        return index < paths.size() && index >= 0 ? Storage.getInstance().getOfType(paths.get(index), Path.class) : null;
     }
 
     public void addEnemy(Enemy enemy) {
@@ -64,11 +67,41 @@ public class Place extends EntityClass {
     }
 
     public Enemy getEnemy(int index) {
-        return Storage.getInstance().getEnemy(enemies.get(index));
+        return Storage.getInstance().getOfType(enemies.get(index), Enemy.class);
+    }
+
+    public int getEnemyAmount() {
+        return enemies.size();
     }
 
     public void removeEnemy(Enemy enemy) {
         enemies.remove((Integer) enemy.getId());
+    }
+
+    public void addPlayer(Player player) {
+        players.add(player.getId());
+    }
+
+    public void addPlayer(int id) {players.add(id);}
+
+    public void removePlayer(Player player) {
+        players.remove((Integer) player.getId());
+    }
+
+    public int getPlayerAmount() {
+        return players.size();
+    }
+
+    public Player getPlayer(int index) {
+        return Storage.getInstance().getOfType(players.get(index), Player.class);
+    }
+
+    public void setWorld(World world) {
+        this.world = world;
+    }
+
+    public World getWorld() {
+        return world;
     }
 
     @Override
@@ -77,11 +110,19 @@ public class Place extends EntityClass {
         object.put("id", getId());
         object.put("title", getTitle());
         object.put("description", getDescription());
+
         JSONArray enemiesArray = new JSONArray();
         for (int id : enemies) {
             enemiesArray.put(id);
         }
         object.put("enemies", enemiesArray);
+
+        JSONArray playersArray = new JSONArray();
+        for (int id : players) {
+            playersArray.put(id);
+        }
+        object.put("players", playersArray);
+
         JSONArray pathsArray = new JSONArray();
         for (int id : paths) {
             pathsArray.put(id);
@@ -104,6 +145,12 @@ public class Place extends EntityClass {
         for (int i = 0; i < enemiesArray.length(); i++) {
             addEnemy(enemiesArray.getInt(i));
         }
+
+        JSONArray playersArray = object.optJSONArray("players", new JSONArray());
+        for (int i = 0; i < playersArray.length(); i++) {
+            addPlayer(playersArray.getInt(i));
+        }
+
         inventory.deserialize(object.getJSONObject("inventory"));
 
     }

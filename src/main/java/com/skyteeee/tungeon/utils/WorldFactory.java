@@ -39,10 +39,11 @@ public class WorldFactory {
      */
     public World generate() {
 
+        World world = newWorld();
         int newPlaceChance = 70;
 
         storage.clear();
-        Place first = createPlace();
+        Place first = createPlace(world);
         while (allPlaces.size() < totalPlaces) {
             Place current;
             int newPaths;
@@ -72,14 +73,14 @@ public class WorldFactory {
                     boolean needNewPlace = forceNewPlace || availPlaces.isEmpty() || EntityFactory.rnd.nextInt(100) <= newPlaceChance;
                     Place destination;
                     if (needNewPlace) {
-                        destination = createPlace();
+                        destination = createPlace(world);
                     } else {
                         List<Place> skip = new LinkedList<>();
                         skip.add(current);
                         skip.addAll(current.getDestinations());
                         destination = getAvailablePlace(skip);
                         if (destination == null) {
-                            destination = createPlace();
+                            destination = createPlace(world);
                         }
                     }
 
@@ -98,12 +99,13 @@ public class WorldFactory {
         }
 
 
-        World world = newWorld();
+
         world.setTotalPlaces(totalPlaces);
         world.setSpawn(first);
         Player player = factory.createPlayer();
         world.setPlayer(player);
         player.setCurrentPlace(first);
+        first.addPlayer(player);
         player.setArmor(factory.createArmor(1));
         return world;
     }
@@ -130,8 +132,8 @@ public class WorldFactory {
         }
     }
 
-    private Place createPlace() {
-        Place place = factory.createPlace();
+    private Place createPlace(World world) {
+        Place place = factory.createPlace(world);
         allPlaces.add(place);
         nextPlaces.add(place);
         availPlaces.add(place);
@@ -180,6 +182,7 @@ public class WorldFactory {
         worldObject.put("weapons", weaponsArray);
         worldObject.put("enemies", enemiesArray);
         worldObject.put("armor", armorArray);
+        worldObject.put("turn", storage.getTurn());
 
         saveObject.put("world", worldObject);
         String toSave = saveObject.toString(2);
@@ -228,6 +231,7 @@ public class WorldFactory {
         JSONArray weaponsArray = worldObject.getJSONArray("weapons");
         JSONArray enemiesArray = worldObject.optJSONArray("enemies", new JSONArray());
         JSONArray armorArray = worldObject.optJSONArray("armor", new JSONArray());
+        storage.setTurn(worldObject.optInt("turn", 0));
 
         for (int i = 0; i < enemiesArray.length(); i++) {
             JSONObject enemyObject = enemiesArray.getJSONObject(i);
@@ -247,6 +251,7 @@ public class WorldFactory {
             JSONObject placeObject = placesArray.getJSONObject(i);
             Place place = factory.newPlace();
             place.deserialize(placeObject);
+            place.setWorld(world);
             storage.putEntity(place);
         }
 
