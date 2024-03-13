@@ -15,11 +15,23 @@ import java.util.List;
 public class World implements GameObject, Savable {
     private Player player;
     private int spawnId;
-    private EntityFactory factory;
+    private final EntityFactory factory;
+    private final Storage storage;
+    private final UIOutput ui = new UIOutput();
     private int totalPlaces = 10;
 
-    public World (EntityFactory factory) {
-        this.factory = factory;
+    public World () {
+        this.storage = new Storage();
+        this.factory = new EntityFactory(this);
+
+    }
+
+    public UIOutput getUi() {
+        return ui;
+    }
+
+    public Storage getStorage() {
+        return storage;
     }
 
     public void setTotalPlaces(int places) {
@@ -38,7 +50,7 @@ public class World implements GameObject, Savable {
     }
 
     public Place getSpawn() {
-        return Storage.getInstance().getPlace(spawnId);
+        return storage.getPlace(spawnId);
     }
 
     public EntityFactory getFactory() {
@@ -46,13 +58,13 @@ public class World implements GameObject, Savable {
     }
 
     public void printState() {
-        System.out.println();
-        UserInterface.strike();
+        ui.println();
+        ui.strike();
         player.getCurrentPlace().printState(player);
     }
 
     private void nextTurn() {
-        Storage instance = Storage.getInstance();
+        Storage instance = storage;
         List<Enemy> enemies = instance.getAllOfType(Enemy.class);
         List<Player> players = instance.getAllOfType(Player.class);
         for (Enemy enemy : enemies) {
@@ -63,7 +75,7 @@ public class World implements GameObject, Savable {
         for (Player playa : players) {
             playa.onTurn();
         }
-        Storage.getInstance().nextTurn();
+        instance.nextTurn();
     }
 
     public void give(int choice) {
@@ -82,7 +94,7 @@ public class World implements GameObject, Savable {
 
     public void onPlayerDeath() {
         player.resurrect(getSpawn());
-        Storage.getInstance().resetTurn();
+        storage.resetTurn();
     }
 
     public boolean move(int choice) {
@@ -149,7 +161,7 @@ public class World implements GameObject, Savable {
         setSpawn(object.getInt("spawn"));
         int playerId = object.optInt("player", 0);
         if (playerId != 0) {
-            setPlayer((Player) Storage.getInstance().getEntity(playerId));
+            setPlayer((Player) storage.getEntity(playerId));
         }
     }
 }

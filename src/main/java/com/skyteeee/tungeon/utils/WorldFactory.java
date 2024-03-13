@@ -24,8 +24,7 @@ public class WorldFactory {
      */
     int totalPlaces = 100;
     int maxPathsPerPlace = 4;
-    EntityFactory factory = new EntityFactory();
-    Storage storage = Storage.getInstance();
+    EntityFactory factory;
     List<Place> allPlaces = new LinkedList<>();
     List<Place> nextPlaces = new LinkedList<>();
     List<Place> availPlaces = new LinkedList<>();
@@ -40,6 +39,9 @@ public class WorldFactory {
     public World generate() {
 
         World world = newWorld();
+        factory = world.getFactory();
+        Storage storage = world.getStorage();
+
         int newPlaceChance = 70;
 
         storage.clear();
@@ -111,7 +113,7 @@ public class WorldFactory {
     }
 
     public World newWorld() {
-        return new World(factory);
+        return new World();
     }
 
 
@@ -141,6 +143,8 @@ public class WorldFactory {
     }
 
     public boolean save(World world, String fileNameString) {
+        Storage storage = world.getStorage();
+
         JSONObject saveObject = new JSONObject();
         JSONObject worldObject = world.serialize();
         JSONArray placesArray = new JSONArray();
@@ -204,11 +208,12 @@ public class WorldFactory {
             return false;
         }
 
-        System.out.println("Successfully saved to " + savePath.toAbsolutePath());
+        world.getUi().println("Successfully saved to " + savePath.toAbsolutePath());
         return true;
     }
 
     public World load(String fileNameString) {
+        World world = newWorld();
 
         String fileName = fileNameString == null ? FALLBACK_FILE_NAME : fileNameString;
         java.nio.file.Path loadPath = Paths.get(SAVE_DIR, fileName);
@@ -216,12 +221,13 @@ public class WorldFactory {
         try {
             fileContents = Files.readString(loadPath, StandardCharsets.UTF_8);
         } catch (IOException exception) {
-            System.out.println("Could not load world from " + loadPath.toAbsolutePath());
+            world.getUi().println("Could not load world from " + loadPath.toAbsolutePath());
             return null;
         }
-        storage.clear();
 
-        World world = newWorld();
+
+        factory = world.getFactory();
+        Storage storage = world.getStorage();
 
         JSONObject bigObject = new JSONObject(fileContents);
         JSONObject worldObject = bigObject.getJSONObject("world");

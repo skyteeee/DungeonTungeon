@@ -14,7 +14,7 @@ public class Main {
         WorldFactory worldFactory = new WorldFactory();
         UserInterface userInterface = new UserInterface(worldFactory);
         BotoBatya batya = new BotoBatya();
-        batya.setup();
+        batya.setup(args[0]);
         userInterface.initialMessage();
         gameLoop(userInterface);
 

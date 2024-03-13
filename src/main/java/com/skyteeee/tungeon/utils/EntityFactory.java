@@ -308,14 +308,16 @@ public class EntityFactory {
 
     };
 
-    private final Storage storage = Storage.getInstance();
+    private final Storage storage;
+    private World world;
 
     private static final int WEAPON_CHANCE = 50;
     private static final int ENEMY_CHANCE = 80;
     private static final int ARMOR_CHANCE = 40;
 
-    public EntityFactory() {
-
+    public EntityFactory(World world) {
+        this.world = world;
+        storage = world.getStorage();
     }
 
     public Weapon createWeapon(int level) {
@@ -344,7 +346,9 @@ public class EntityFactory {
     }
 
     public Weapon newWeapon() {
-        return new Weapon();
+        Weapon w = new Weapon();
+        w.setWorld(world);
+        return w;
     }
 
     public Armor createArmor(int level) {
@@ -373,7 +377,9 @@ public class EntityFactory {
     }
 
     public Armor newArmor() {
-        return new Armor();
+        Armor a = new Armor();
+        a.setWorld(world);
+        return a;
     }
 
 
@@ -386,7 +392,6 @@ public class EntityFactory {
         String descriptor = descriptors[rnd.nextInt(descriptors.length)];
         place.setDescription(size + " " + descriptor + " " + color + " " + terrain);
         place.setTitle(descriptor + " " + terrain);
-        place.setWorld(world);
         if (rnd.nextInt(100) < WEAPON_CHANCE) {
             place.getInventory().addItem(createWeapon(1));
         }
@@ -406,7 +411,8 @@ public class EntityFactory {
     }
 
     public Place newPlace() {
-        return new Outdoors();
+        Place p = new Outdoors(world);
+        return p;
     }
 
     public Enemy createEnemy() {
@@ -444,15 +450,15 @@ public class EntityFactory {
 
         Place place = enemy2.getCurrentPlace();
 
-        System.out.println("[LOG] merging at place " + place.getId());
-        System.out.println("[LOG] enemy 1: " + enemy1.getTitle());
-        System.out.println("[LOG] enemy 2: " + enemy2.getTitle());
+        world.getUi().println("[LOG] merging at place " + place.getId());
+        world.getUi().println("[LOG] enemy 1: " + enemy1.getTitle());
+        world.getUi().println("[LOG] enemy 2: " + enemy2.getTitle());
 
         if (enemy1.getCurrentWeapon() == null) {
-            System.out.println("[ERROR] enemy1 has no weapon");
+            world.getUi().println("[ERROR] enemy1 has no weapon");
         }
         if (enemy2.getCurrentWeapon() == null) {
-            System.out.println("[ERROR] enemy2 has no weapon");
+            world.getUi().println("[ERROR] enemy2 has no weapon");
         }
 
         int newLevel = enemy1.getLevel() + enemy2.getLevel();
@@ -513,12 +519,13 @@ public class EntityFactory {
         storage.removeEntity(enemy1);
         storage.removeEntity(enemy2);
 
-        System.out.println("[LOG] merged : " + merged.getTitle());
+        world.getUi().println("[LOG] merged : " + merged.getTitle());
         return merged;
     }
 
     public Enemy newEnemy(int level) {
-        return new Enemy(level);
+        Enemy e =new Enemy(level, world);
+        return e;
     }
 
     public Path createPath() {
@@ -531,7 +538,9 @@ public class EntityFactory {
     }
 
     public Path newPath() {
-        return new Path();
+        Path p = new Path();
+        p.setWorld(world);
+        return p;
     }
 
     public Player createPlayer() {
@@ -541,7 +550,8 @@ public class EntityFactory {
     }
 
     public Player newPlayer() {
-        return new Player();
+        Player p = new Player(world);
+        return p;
     }
 
 

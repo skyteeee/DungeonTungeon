@@ -17,12 +17,16 @@ public class Place extends EntityClass {
     private List<Integer> paths = new ArrayList<>();
     private List<Integer> enemies = new ArrayList<>();
     private List<Integer> players = new ArrayList<>();
-    private World world;
 
     private String description;
     private String title;
 
-    private final Inventory inventory = new Inventory(10);
+    private final Inventory inventory;
+
+    public Place(World world) {
+        setWorld(world);
+        inventory = new Inventory(10, world);
+    }
 
     public Item give(int choice) {
         Item item = inventory.getItem(choice);
@@ -55,7 +59,7 @@ public class Place extends EntityClass {
     }
 
     public Path getPath (int index) {
-        return index < paths.size() && index >= 0 ? Storage.getInstance().getOfType(paths.get(index), Path.class) : null;
+        return index < paths.size() && index >= 0 ? getWorld().getStorage().getOfType(paths.get(index), Path.class) : null;
     }
 
     public void addEnemy(Enemy enemy) {
@@ -67,7 +71,7 @@ public class Place extends EntityClass {
     }
 
     public Enemy getEnemy(int index) {
-        return Storage.getInstance().getOfType(enemies.get(index), Enemy.class);
+        return getWorld().getStorage().getOfType(enemies.get(index), Enemy.class);
     }
 
     public int getEnemyAmount() {
@@ -93,15 +97,7 @@ public class Place extends EntityClass {
     }
 
     public Player getPlayer(int index) {
-        return Storage.getInstance().getOfType(players.get(index), Player.class);
-    }
-
-    public void setWorld(World world) {
-        this.world = world;
-    }
-
-    public World getWorld() {
-        return world;
+        return getWorld().getStorage().getOfType(players.get(index), Player.class);
     }
 
     @Override
@@ -158,7 +154,7 @@ public class Place extends EntityClass {
     public List<Place> getDestinations() {
         List<Place> destinations = new LinkedList<>();
         for (int id : paths) {
-            Path path = Storage.getInstance().getPath(id);
+            Path path = getWorld().getStorage().getPath(id);
             destinations.add(path.getDestination(this));
         }
         return destinations;
@@ -178,26 +174,26 @@ public class Place extends EntityClass {
     }
 
     public void printState(Player player) {
-        Storage storage = Storage.getInstance();
-        System.out.println("You are in " + description + " (" + getId() + ")");
-        UserInterface.strike();
+        Storage storage = getWorld().getStorage();
+        getWorld().getUi().println("You are in " + description + " (" + getId() + ")");
+        getWorld().getUi().strike();
         if (!inventory.isEmpty()) {
-            System.out.println("You see the following items: ");
+            getWorld().getUi().println("You see the following items: ");
             inventory.printState(false);
-            UserInterface.strike();
+            getWorld().getUi().strike();
         }
 
         if (!enemies.isEmpty()) {
-            System.out.println("YOU ENCOUNTERED THE FOLLOWING ENEMIES: ");
+            getWorld().getUi().println("YOU ENCOUNTERED THE FOLLOWING ENEMIES: ");
             for (int i = 0; i < enemies.size(); i++) {
                 int id = enemies.get(i);
-                System.out.print((i+1) + ". ");
+                getWorld().getUi().print((i+1) + ". ");
                 storage.getEnemy(id).printState();
             }
-            UserInterface.strike();
+            getWorld().getUi().strike();
         }
 
-        System.out.println("You see the following paths: ");
+        getWorld().getUi().println("You see the following paths: ");
         for (int i = 0; i < paths.size(); i ++) {
             Path path = (Path) storage.getEntity(paths.get(i));
             path.printState(i+1, player, this);
