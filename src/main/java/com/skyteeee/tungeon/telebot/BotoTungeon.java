@@ -1,9 +1,7 @@
 package com.skyteeee.tungeon.telebot;
 
 import com.skyteeee.tungeon.World;
-import com.skyteeee.tungeon.utils.UIOutput;
-import com.skyteeee.tungeon.utils.UserInterface;
-import com.skyteeee.tungeon.utils.WorldFactory;
+import com.skyteeee.tungeon.utils.*;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
@@ -34,9 +32,32 @@ public class BotoTungeon extends TelegramLongPollingCommandBot {
         out.println("Registered Boto into Telegram");
     }
 
+    private void sendMessage(long chatId, String toSend) {
+        SendMessage out = new SendMessage(String.valueOf(chatId), toSend);
+        try {
+            execute(out);
+        } catch (TelegramApiException exception) {
+            exception.printStackTrace();
+        }
+    }
+
     @Override
     public void processNonCommandUpdate(Update update) {
+        if (update.hasMessage()) {
+            Message message = update.getMessage();
+            String contents = message.getText();
+            World world = worlds.get(message.getChatId());
+            if (world != null && world.getAwaitingCommand() != null) {
+                AwaitingCommand command = world.getAwaitingCommand();
+                try {
+                    command.process(world, Integer.parseInt(contents));
+                    sendMessage(message.getChatId(),world.getUi().flush());
+                } catch (Exception e) {
+                    sendMessage(message.getChatId(), "\uD83E\uDD21 We wanted a number...");
+                }
 
+            }
+        }
     }
 
     @Override
@@ -53,6 +74,12 @@ public class BotoTungeon extends TelegramLongPollingCommandBot {
         register(new HelloCommand());
         register(new StartCommand());
         register(new NewGameCommand());
+        register(new InventoryCommand());
+        register(new StatusCommand());
+        register(new AttackCommand());
+        for (int i = 0; i < WorldFactory.maxPathsPerPlace; i++) {
+            register(new GoCommand(i+1));
+        }
     }
 
     class HelloCommand implements IBotCommand {
@@ -127,14 +154,126 @@ public class BotoTungeon extends TelegramLongPollingCommandBot {
 
     }
 
+    abstract class GameCommand extends BaseCommand {
+
+        protected World world;
+        @Override
+        protected void doCommand(String[] arguments) {
+            if (worlds.containsKey(chatId)) {
+                world = worlds.get(chatId);
+                doGameCommand(arguments);
+            } else {
+                reply("Bros, create the world first!!\n" +
+                        "Use /new to start a new world or /load if you already have one");
+            }
+        }
+
+        protected void worldReply() {
+            reply(world.getUi().flush());
+        }
+
+        abstract protected void doGameCommand(String[] args);
+
+    }
+
+    class GoCommand extends GameCommand{
+        private final int choice;
+        GoCommand(int choice) {
+            this.choice = choice;
+        }
+        @Override
+        protected void doGameCommand(String[] args) {
+            if(!world.move(choice)) {
+                reply("\uD83E\uDD21 Invalid move command. Please choose a path that exists.");
+            }
+            world.printState();
+            worldReply();
+        }
+
+        @Override
+        public String getCommandIdentifier() {
+            return "go" + choice;
+        }
+
+        @Override
+        public String getDescription() {
+            return "Go to path #" + choice;
+        }
+    }
+
+    class InventoryCommand extends GameCommand{
+        @Override
+        protected void doGameCommand(String[] args) {
+            world.getPlayer().printInventory();
+            worldReply();
+        }
+
+        @Override
+        public String getCommandIdentifier() {
+            return "inv";
+        }
+
+        @Override
+        public String getDescription() {
+            return "See your current inventory.";
+        }
+    }
+
+    class StatusCommand extends GameCommand{
+        @Override
+        protected void doGameCommand(String[] args) {
+            world.getPlayer().printState();
+            world.getPlayer().printInventory();
+            worldReply();
+        }
+
+        @Override
+        public String getCommandIdentifier() {
+            return "stat";
+        }
+
+        @Override
+        public String getDescription() {
+            return "See your status like health and xp";
+        }
+    }
+
+    class AttackCommand extends GameCommand{
+        @Override
+        protected void doGameCommand(String[] args) {
+            int choice = 0;
+            if (args.length != 0) {
+                choice = Integer.parseInt(args[0])-1;
+            }
+            if (world.attack(choice)) {
+                world.printState();
+            }
+
+            worldReply();
+        }
+
+        @Override
+        public String getCommandIdentifier() {
+            return "attack";
+        }
+
+        @Override
+        public String getDescription() {
+            return "attack an enemy of choice or #1";
+        }
+    }
+
     class NewGameCommand extends BaseCommand {
         @Override
         protected void doCommand(String[] arguments) {
             reply("Creating new game \uD83D\uDD03");
             World world = new WorldFactory().generate();
+            world.setUi(new UITelegramOutput());
             worlds.put(chatId, world);
             new WorldFactory().save(world, "chat_" + chatId + ".json");
-
+            world.getUi().flush();
+            world.printState();
+            reply(world.getUi().flush());
         }
 
         @Override

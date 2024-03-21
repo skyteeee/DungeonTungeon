@@ -17,8 +17,9 @@ public class World implements GameObject, Savable {
     private int spawnId;
     private final EntityFactory factory;
     private final Storage storage;
-    private final UIOutput ui = new UIOutput();
+    private UIOutput ui = new UIOutput();
     private int totalPlaces = 10;
+    private AwaitingCommand awaitingCommand = null;
 
     public World () {
         this.storage = new Storage();
@@ -26,8 +27,19 @@ public class World implements GameObject, Savable {
 
     }
 
+    public void setAwaitingCommand(AwaitingCommand command) {
+        awaitingCommand = command;
+    }
+
+    public AwaitingCommand getAwaitingCommand() {
+        return awaitingCommand;
+    }
+
     public UIOutput getUi() {
         return ui;
+    }
+    public void setUi(UIOutput ui) {
+        this.ui = ui;
     }
 
     public Storage getStorage() {
@@ -65,6 +77,7 @@ public class World implements GameObject, Savable {
 
     private void nextTurn() {
         Storage instance = storage;
+        awaitingCommand = null;
         List<Enemy> enemies = instance.getAllOfType(Enemy.class);
         List<Player> players = instance.getAllOfType(Player.class);
         for (Enemy enemy : enemies) {
@@ -90,6 +103,22 @@ public class World implements GameObject, Savable {
     public void attack(int enemyIdx, UserInterface ui) {
         player.attack(enemyIdx, ui);
         nextTurn();
+    }
+
+    public boolean attack(int enemyIdx) {
+        if (player.attack(enemyIdx)) {
+            nextTurn();
+            return true;
+        }
+        return false;
+    }
+
+    public boolean attack(int enemyIdx, int weaponIdx) {
+        if (player.attack(enemyIdx, weaponIdx)) {
+            nextTurn();
+            return true;
+        }
+        return false;
     }
 
     public void onPlayerDeath() {

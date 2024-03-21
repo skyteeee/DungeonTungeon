@@ -23,7 +23,7 @@ public class WorldFactory {
      * total amount of places in a world
      */
     int totalPlaces = 100;
-    int maxPathsPerPlace = 4;
+    public static int maxPathsPerPlace = 4;
     EntityFactory factory;
     List<Place> allPlaces = new LinkedList<>();
     List<Place> nextPlaces = new LinkedList<>();

@@ -11,6 +11,10 @@ public class UIOutput {
         println("-----");
     }
 
+    public void log(String message) {
+        System.out.println("[LOG]: " + message);
+    }
+
 
 
     public void sleep(long millis) {
@@ -43,6 +47,10 @@ public class UIOutput {
 
     public void println() {
         System.out.println();
+    }
+
+    public String flush() {
+        return "";
     }
 
 }

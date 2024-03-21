@@ -6,6 +6,7 @@ import com.skyteeee.tungeon.entities.items.Item;
 import com.skyteeee.tungeon.entities.items.Weapon;
 import com.skyteeee.tungeon.storage.Inventory;
 import com.skyteeee.tungeon.storage.Storage;
+import com.skyteeee.tungeon.utils.AwaitingAttackCommand;
 import com.skyteeee.tungeon.utils.UserInterface;
 import org.json.JSONObject;
 
@@ -175,6 +176,40 @@ public class Player extends EntityClass implements Character {
             }
         }
         return true;
+    }
+
+    public boolean attack(int enemyIdx) {
+        Enemy enemy = getCurrentPlace().getEnemy(enemyIdx);
+        if (enemy == null) {
+            getWorld().getUi().println("\uD83E\uDD21 Enemy selected is not valid. Please select an enemy that exists.");
+            return false;
+        }
+        if (inventory.isEmpty() || noWeapons()) {
+            getWorld().getUi().println("As you leap towards the enemy, you realize that you lack any weapons. It is too late to turn away now. You attack it with your bare hands");
+            attack(enemy, Weapon.BARE_HANDS);
+            return true;
+        } else {
+            getWorld().getUi().println("You have the following items: ");
+            inventory.printState(true);
+            getWorld().getUi().println("Which weapon would you like to use? ");
+            getWorld().setAwaitingCommand(new AwaitingAttackCommand(enemyIdx));
+        }
+        return false;
+    }
+
+    public boolean attack(int enemyIdx, int weaponIdx) {
+        try {
+            Item selected = inventory.getItem(weaponIdx);
+            if (selected instanceof Weapon weapon) {
+                Enemy enemy = getCurrentPlace().getEnemy(enemyIdx);
+                attack(enemy, weapon);
+                return true;
+            }
+        } catch (IndexOutOfBoundsException e) {
+            getWorld().getUi().println("\uD83E\uDD21 Selected value not in inventory. Please select a weapon that exists.");
+            printInventory();
+        }
+        return false;
     }
 
     public void attack(int enemyIdx, UserInterface ui) {

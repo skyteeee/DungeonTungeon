@@ -183,7 +183,7 @@ public class Enemy extends EntityClass implements Character{
             if (enemyAmount == 1 || enemyAmount >= EntityFactory.rnd.nextInt(2, 4)) {
                 moveSomewhere(currentPlace);
             } else {
-                getWorld().getUi().println("LOG: Enemy did not move. There are " + enemyAmount + " enemies at " + currentPlace.getId());
+                getWorld().getUi().log("Enemy did not move. There are " + enemyAmount + " enemies at " + currentPlace.getId());
             }
         }
         usedTurn = false;
@@ -209,7 +209,7 @@ public class Enemy extends EntityClass implements Character{
         if (EntityFactory.rnd.nextFloat() < mergeChance && destination.getEnemyAmount() > 1
                 && destination.getPlayerAmount() == 0) {
             int amount = destination.getEnemyAmount();
-            getWorld().getUi().println("[LOG] attempting merge at " + currentPlaceId);
+            getWorld().getUi().log("attempting merge at " + currentPlaceId);
             for (int i = 0; i < amount; i++) {
                 Enemy e = destination.getEnemy(i);
                 if (e.getId() != getId()) {

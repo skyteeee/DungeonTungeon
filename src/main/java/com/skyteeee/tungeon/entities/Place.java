@@ -71,6 +71,9 @@ public class Place extends EntityClass {
     }
 
     public Enemy getEnemy(int index) {
+        if (index >= enemies.size()) {
+            return null;
+        }
         return getWorld().getStorage().getOfType(enemies.get(index), Enemy.class);
     }
 

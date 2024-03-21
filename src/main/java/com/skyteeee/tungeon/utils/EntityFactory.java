@@ -450,9 +450,9 @@ public class EntityFactory {
 
         Place place = enemy2.getCurrentPlace();
 
-        world.getUi().println("[LOG] merging at place " + place.getId());
-        world.getUi().println("[LOG] enemy 1: " + enemy1.getTitle());
-        world.getUi().println("[LOG] enemy 2: " + enemy2.getTitle());
+        world.getUi().log("merging at place " + place.getId());
+        world.getUi().log("enemy 1: " + enemy1.getTitle());
+        world.getUi().log("enemy 2: " + enemy2.getTitle());
 
         if (enemy1.getCurrentWeapon() == null) {
             world.getUi().println("[ERROR] enemy1 has no weapon");
@@ -519,7 +519,7 @@ public class EntityFactory {
         storage.removeEntity(enemy1);
         storage.removeEntity(enemy2);
 
-        world.getUi().println("[LOG] merged : " + merged.getTitle());
+        world.getUi().log("merged : " + merged.getTitle());
         return merged;
     }
 
