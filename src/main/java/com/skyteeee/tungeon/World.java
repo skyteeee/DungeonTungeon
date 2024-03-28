@@ -5,6 +5,7 @@ import com.skyteeee.tungeon.entities.Path;
 import com.skyteeee.tungeon.entities.Place;
 import com.skyteeee.tungeon.entities.Player;
 import com.skyteeee.tungeon.entities.items.Item;
+import com.skyteeee.tungeon.storage.Inventory;
 import com.skyteeee.tungeon.storage.Storage;
 import com.skyteeee.tungeon.utils.*;
 import org.json.JSONObject;
@@ -99,6 +100,14 @@ public class World implements GameObject, Savable {
         Item item = player.give(choice);
         player.getCurrentPlace().take(item);
     }
+
+    public void give() {
+        Inventory inventory = player.getCurrentPlace().getInventory();
+        ui.println("Please choose an item to take: ");
+        inventory.printState(true);
+        setAwaitingCommand(new AwaitingTakeCommand());
+    }
+
 
     public void attack(int enemyIdx, UserInterface ui) {
         player.attack(enemyIdx, ui);

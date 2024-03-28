@@ -88,7 +88,7 @@ public class Path extends EntityClass {
         this.title = title;
     }
 
-    private boolean hasVisited(Character character) {
+    public boolean hasVisited(Character character) {
         return playersVisited.contains(character.getId());
     }
 

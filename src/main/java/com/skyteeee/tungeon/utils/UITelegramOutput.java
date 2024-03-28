@@ -1,5 +1,7 @@
 package com.skyteeee.tungeon.utils;
 
+import com.vdurmont.emoji.EmojiParser;
+
 public class UITelegramOutput extends UIOutput{
 
     private StringBuilder buffer = new StringBuilder();
@@ -30,13 +32,19 @@ public class UITelegramOutput extends UIOutput{
         buffer.append("\n");
     }
 
+
+    @Override
+    public void sleep(long millis) {
+
+    }
+
     @Override
     public void println() {
         buffer.append("\n");
     }
     @Override
     public String flush() {
-        String str = buffer.toString();
+        String str = EmojiParser.parseToUnicode(buffer.toString());
         buffer = new StringBuilder();
         return str;
     }

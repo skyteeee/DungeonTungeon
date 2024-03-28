@@ -16,6 +16,7 @@ dependencies {
     implementation("org.json:json:20231013")
     implementation("org.telegram:telegrambots:6.9.7.1")
     implementation("org.telegram:telegrambotsextensions:6.9.7.1")
+    implementation("com.vdurmont:emoji-java:5.1.1")
 }
 
 tasks.test {

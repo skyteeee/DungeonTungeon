@@ -1,16 +1,28 @@
 package com.skyteeee.tungeon.telebot;
 
 import com.skyteeee.tungeon.World;
+import com.skyteeee.tungeon.entities.Place;
+import com.skyteeee.tungeon.entities.items.Armor;
+import com.skyteeee.tungeon.storage.Inventory;
 import com.skyteeee.tungeon.utils.*;
+import com.vdurmont.emoji.EmojiParser;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.extensions.bots.commandbot.TelegramLongPollingCommandBot;
 import org.telegram.telegrambots.extensions.bots.commandbot.commands.IBotCommand;
+import org.telegram.telegrambots.meta.api.methods.AnswerCallbackQuery;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
+import org.telegram.telegrambots.meta.api.objects.MaybeInaccessibleMessage;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.commands.BotCommand;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboard;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow;
 import org.telegram.telegrambots.meta.bots.AbsSender;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
@@ -41,21 +53,103 @@ public class BotoTungeon extends TelegramLongPollingCommandBot {
         }
     }
 
+    private void sendMessage(long chatId, String toSend, ReplyKeyboard keyboard) {
+        SendMessage out = new SendMessage(String.valueOf(chatId), toSend);
+        out.setReplyMarkup(keyboard);
+        try {
+            execute(out);
+        } catch (TelegramApiException exception) {
+            exception.printStackTrace();
+        }
+    }
+
     @Override
     public void processNonCommandUpdate(Update update) {
+        out.log("received non command update");
         if (update.hasMessage()) {
             Message message = update.getMessage();
             String contents = message.getText();
-            World world = worlds.get(message.getChatId());
-            if (world != null && world.getAwaitingCommand() != null) {
-                AwaitingCommand command = world.getAwaitingCommand();
-                try {
-                    command.process(world, Integer.parseInt(contents));
-                    sendMessage(message.getChatId(),world.getUi().flush());
-                } catch (Exception e) {
-                    sendMessage(message.getChatId(), "\uD83E\uDD21 We wanted a number...");
-                }
+            processAwait(message, contents);
+        }
 
+        if (update.hasCallbackQuery()) {
+            CallbackQuery query = update.getCallbackQuery();
+            String contents = query.getData();
+            String[] parts = contents.split(" ");
+            if (parts.length > 1) {
+                processQueryCommand(query.getMessage().getChatId(), parts);
+            } else {
+                processAwait(query.getMessage(), contents);
+            }
+            try {
+                execute(new AnswerCallbackQuery(query.getId()));
+            } catch (Exception e) {
+
+            }
+        }
+
+    }
+    private ReplyKeyboard mainKeyboard(World world) {
+        ReplyKeyboardMarkup keyboardMarkup = new ReplyKeyboardMarkup();
+        // Create the keyboard (list of keyboard rows)
+        List<KeyboardRow> keyboard = new ArrayList<>();
+        // Create a keyboard row
+        KeyboardRow goRow = new KeyboardRow();
+        // Set each button, you can also use KeyboardButton objects if you need something else than text
+        Place place = world.getPlayer().getCurrentPlace();
+        for (int i = 0; i < place.getPathCount(); i++) {
+            String title = "/go"+(i+1);
+            if (place.getPath(i).hasVisited(world.getPlayer())) {
+                title += " :round_pushpin:";
+            }
+            goRow.add(EmojiParser.parseToUnicode(title));
+
+        }
+
+        KeyboardRow attackRow = new KeyboardRow();
+        for (int i = 0; i < place.getEnemyAmount(); i++) {
+            String title = "/attack " + (i+1) + " :crossed_swords:";
+            attackRow.add(EmojiParser.parseToUnicode(title));
+        }
+
+        KeyboardRow statusRow = new KeyboardRow();
+        statusRow.add(EmojiParser.parseToUnicode("/stat :sparkling_heart:"));
+        if (!place.getInventory().isEmpty()) statusRow.add(EmojiParser.parseToUnicode("/take :school_satchel:"));
+
+        // Add the first row to the keyboard
+        keyboard.add(goRow);
+        if (!attackRow.isEmpty()) keyboard.add(attackRow);
+        keyboard.add(statusRow);
+        keyboardMarkup.setKeyboard(keyboard);
+        keyboardMarkup.setResizeKeyboard(true);
+        return  keyboardMarkup;
+    }
+
+    private void processQueryCommand(long chatId, String[] parts) {
+        World world = worlds.get(chatId);
+        switch (parts[0]) {
+            case "drop" :
+                world.take(Integer.parseInt(parts[1]) - 1);
+                break;
+            case "equip" :
+                world.getPlayer().equipArmor(Integer.parseInt(parts[1])-1);
+                break;
+        }
+
+        world.printState();
+        sendMessage(chatId,world.getUi().flush(), mainKeyboard(world));
+
+    }
+
+    private void processAwait(MaybeInaccessibleMessage message, String contents) {
+        World world = worlds.get(message.getChatId());
+        if (world != null && world.getAwaitingCommand() != null) {
+            AwaitingCommand command = world.getAwaitingCommand();
+            try {
+                command.process(world, Integer.parseInt(contents));
+                sendMessage(message.getChatId(),world.getUi().flush(), mainKeyboard(world));
+            } catch (Exception e) {
+                sendMessage(message.getChatId(), "\uD83E\uDD21 We wanted a number...");
             }
         }
     }
@@ -77,6 +171,7 @@ public class BotoTungeon extends TelegramLongPollingCommandBot {
         register(new InventoryCommand());
         register(new StatusCommand());
         register(new AttackCommand());
+        register(new TakeCommand());
         for (int i = 0; i < WorldFactory.maxPathsPerPlace; i++) {
             register(new GoCommand(i+1));
         }
@@ -150,6 +245,10 @@ public class BotoTungeon extends TelegramLongPollingCommandBot {
             UserInterface.sendTelegramMessage(chatId, text, sender);
         }
 
+        protected void reply(String text, ReplyKeyboard keyboard) {
+            UserInterface.sendTelegramMessage(chatId, text, sender, keyboard);
+        }
+
         abstract protected void doCommand(String[] arguments);
 
     }
@@ -169,7 +268,11 @@ public class BotoTungeon extends TelegramLongPollingCommandBot {
         }
 
         protected void worldReply() {
-            reply(world.getUi().flush());
+            reply(world.getUi().flush(), mainKeyboard(world));
+        }
+
+        protected void worldReply(ReplyKeyboard keyboard) {
+            reply(world.getUi().flush(), keyboard);
         }
 
         abstract protected void doGameCommand(String[] args);
@@ -224,7 +327,35 @@ public class BotoTungeon extends TelegramLongPollingCommandBot {
         protected void doGameCommand(String[] args) {
             world.getPlayer().printState();
             world.getPlayer().printInventory();
-            worldReply();
+            worldReply(generateKeyboard());
+        }
+
+        private ReplyKeyboard generateKeyboard() {
+            InlineKeyboardMarkup markupInline = new InlineKeyboardMarkup();
+            List<List<InlineKeyboardButton>> rowsInline = new ArrayList<>();
+
+            Inventory inventory = world.getPlayer().getInventory();
+            for (int i = 0; i < inventory.size(); i++) {
+                List<InlineKeyboardButton> rowInline = new ArrayList<>();
+                InlineKeyboardButton button = new InlineKeyboardButton();
+                button.setText(EmojiParser.parseToUnicode(":x: Drop " + (i+1)));
+                button.setCallbackData("drop "+(i+1));
+                rowInline.add(button);
+
+                if (inventory.getItem(i) instanceof Armor) {
+                    InlineKeyboardButton equip = new InlineKeyboardButton();
+                    equip.setText(EmojiParser.parseToUnicode(":shield: Equip " + (i+1)));
+                    equip.setCallbackData("equip "+(i+1));
+                    rowInline.add(equip);
+                }
+
+
+                rowsInline.add(rowInline);
+            }
+            // Set the keyboard to the markup
+            // Add it to the message
+            markupInline.setKeyboard(rowsInline);
+            return markupInline;
         }
 
         @Override
@@ -263,6 +394,42 @@ public class BotoTungeon extends TelegramLongPollingCommandBot {
         }
     }
 
+    class TakeCommand extends GameCommand {
+        @Override
+        protected void doGameCommand(String[] args) {
+            Inventory inventory = world.getPlayer().getCurrentPlace().getInventory();
+            if (inventory.isEmpty()) {
+                reply("Sorry, there is nothing to take here. :frowning:");
+                return;
+            }
+            world.give();
+            InlineKeyboardMarkup markupInline = new InlineKeyboardMarkup();
+            List<List<InlineKeyboardButton>> rowsInline = new ArrayList<>();
+            List<InlineKeyboardButton> rowInline = new ArrayList<>();
+            for (int i = 0; i < inventory.size(); i++) {
+                InlineKeyboardButton button = new InlineKeyboardButton();
+                button.setText(EmojiParser.parseToUnicode(":point_right: " + (i+1)));
+                button.setCallbackData(String.valueOf(i+1));
+                rowInline.add(button);
+            }
+            // Set the keyboard to the markup
+            rowsInline.add(rowInline);
+            // Add it to the message
+            markupInline.setKeyboard(rowsInline);
+            worldReply(markupInline);
+        }
+
+        @Override
+        public String getCommandIdentifier() {
+            return "take";
+        }
+
+        @Override
+        public String getDescription() {
+            return "take an item from the ground";
+        }
+    }
+
     class NewGameCommand extends BaseCommand {
         @Override
         protected void doCommand(String[] arguments) {
@@ -273,7 +440,7 @@ public class BotoTungeon extends TelegramLongPollingCommandBot {
             new WorldFactory().save(world, "chat_" + chatId + ".json");
             world.getUi().flush();
             world.printState();
-            reply(world.getUi().flush());
+            reply(world.getUi().flush(), mainKeyboard(world));
         }
 
         @Override

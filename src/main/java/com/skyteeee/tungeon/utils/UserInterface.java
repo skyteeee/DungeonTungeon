@@ -4,6 +4,7 @@ import com.skyteeee.tungeon.Main;
 import com.skyteeee.tungeon.World;
 import com.skyteeee.tungeon.storage.Storage;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboard;
 import org.telegram.telegrambots.meta.bots.AbsSender;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
@@ -106,6 +107,16 @@ public class UserInterface {
     public static void sendTelegramMessage(long chatID, String message, AbsSender sender) {
         SendMessage response = new SendMessage(String.valueOf(chatID), message);
         try {
+            sender.execute(response);
+        } catch (TelegramApiException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static void sendTelegramMessage(long chatID, String message, AbsSender sender, ReplyKeyboard keyboard) {
+        SendMessage response = new SendMessage(String.valueOf(chatID), message);
+        try {
+            if (keyboard != null) response.setReplyMarkup(keyboard);
             sender.execute(response);
         } catch (TelegramApiException e) {
             e.printStackTrace();
