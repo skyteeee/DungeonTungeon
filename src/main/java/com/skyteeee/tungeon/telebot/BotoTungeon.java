@@ -3,6 +3,7 @@ package com.skyteeee.tungeon.telebot;
 import com.skyteeee.tungeon.World;
 import com.skyteeee.tungeon.entities.Place;
 import com.skyteeee.tungeon.entities.items.Armor;
+import com.skyteeee.tungeon.entities.items.Weapon;
 import com.skyteeee.tungeon.storage.Inventory;
 import com.skyteeee.tungeon.utils.*;
 import com.vdurmont.emoji.EmojiParser;
@@ -12,12 +13,18 @@ import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.extensions.bots.commandbot.TelegramLongPollingCommandBot;
 import org.telegram.telegrambots.extensions.bots.commandbot.commands.IBotCommand;
 import org.telegram.telegrambots.meta.api.methods.AnswerCallbackQuery;
+import org.telegram.telegrambots.meta.api.methods.commands.SetMyCommands;
+import org.telegram.telegrambots.meta.api.methods.menubutton.SetChatMenuButton;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
 import org.telegram.telegrambots.meta.api.objects.MaybeInaccessibleMessage;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.commands.BotCommand;
+import org.telegram.telegrambots.meta.api.objects.commands.scope.BotCommandScopeChat;
+import org.telegram.telegrambots.meta.api.objects.commands.scope.BotCommandScopeDefault;
+import org.telegram.telegrambots.meta.api.objects.menubutton.MenuButtonCommands;
+import org.telegram.telegrambots.meta.api.objects.menubutton.MenuButtonDefault;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboard;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
@@ -69,7 +76,7 @@ public class BotoTungeon extends TelegramLongPollingCommandBot {
         if (update.hasMessage()) {
             Message message = update.getMessage();
             String contents = message.getText();
-            processAwait(message, contents);
+            processAwait(message.getChatId(), contents);
         }
 
         if (update.hasCallbackQuery()) {
@@ -79,7 +86,7 @@ public class BotoTungeon extends TelegramLongPollingCommandBot {
             if (parts.length > 1) {
                 processQueryCommand(query.getMessage().getChatId(), parts);
             } else {
-                processAwait(query.getMessage(), contents);
+                processAwait(query.getMessage().getChatId(), contents);
             }
             try {
                 execute(new AnswerCallbackQuery(query.getId()));
@@ -134,6 +141,9 @@ public class BotoTungeon extends TelegramLongPollingCommandBot {
             case "equip" :
                 world.getPlayer().equipArmor(Integer.parseInt(parts[1])-1);
                 break;
+            case "pickAttack" :
+                processAwait(chatId, parts[1]);
+                return;
         }
 
         world.printState();
@@ -141,16 +151,36 @@ public class BotoTungeon extends TelegramLongPollingCommandBot {
 
     }
 
-    private void processAwait(MaybeInaccessibleMessage message, String contents) {
-        World world = worlds.get(message.getChatId());
+    private void processAwait(long chatId, String contents) {
+        World world = worlds.get(chatId);
         if (world != null && world.getAwaitingCommand() != null) {
             AwaitingCommand command = world.getAwaitingCommand();
             try {
-                command.process(world, Integer.parseInt(contents));
-                sendMessage(message.getChatId(),world.getUi().flush(), mainKeyboard(world));
+                command.process(world, Integer.parseInt(contents)-1);
+                sendMessage(chatId,world.getUi().flush(), mainKeyboard(world));
             } catch (Exception e) {
-                sendMessage(message.getChatId(), "\uD83E\uDD21 We wanted a number...");
+                sendMessage(chatId, "\uD83E\uDD21 We wanted a number...");
             }
+        }
+    }
+
+    private void createMenu(long chatId) {
+        ArrayList<BotCommand> commands = new ArrayList<>();
+        commands.add(BotCommand.builder().command("new").description("Create a new game.").build());
+        commands.add(BotCommand.builder().command("load").description("Load saved game.").build());
+        commands.add(BotCommand.builder().command("save").description("Save the current game state.").build());
+        SetMyCommands myCommands = SetMyCommands.builder().commands(commands).languageCode("en")
+                .scope(BotCommandScopeChat.builder().chatId(chatId).build()).build();
+        SetChatMenuButton button = SetChatMenuButton.builder()
+                .menuButton(MenuButtonCommands.builder().build()).build();
+        button.setChatId(chatId);
+        try {
+            myCommands.validate();
+            button.validate();
+            execute(myCommands);
+            execute(button);
+        } catch (TelegramApiException ignored) {
+            ignored.printStackTrace();
         }
     }
 
@@ -172,6 +202,8 @@ public class BotoTungeon extends TelegramLongPollingCommandBot {
         register(new StatusCommand());
         register(new AttackCommand());
         register(new TakeCommand());
+        register(new LoadCommand());
+        register(new SaveCommand());
         for (int i = 0; i < WorldFactory.maxPathsPerPlace; i++) {
             register(new GoCommand(i+1));
         }
@@ -212,6 +244,7 @@ public class BotoTungeon extends TelegramLongPollingCommandBot {
             long chatId = message.getChatId();
             if (arguments.length != 0 && arguments[0].equals(password)) {
                 addToWhitelist(chatId);
+                createMenu(chatId);
                 UserInterface.sendTelegramMessage(chatId, "Success! Welcome to the Dungeon Tungeon!", absSender);
             } else {
                 UserInterface.sendTelegramMessage(chatId, "Sorry, you cannot enter the Dungeon :( \nPlease provide the correct password...", absSender);
@@ -378,9 +411,32 @@ public class BotoTungeon extends TelegramLongPollingCommandBot {
             }
             if (world.attack(choice)) {
                 world.printState();
+                worldReply();
+            } else {
+                worldReply(generateKeyboard());
             }
 
-            worldReply();
+        }
+
+        private ReplyKeyboard generateKeyboard() {
+            InlineKeyboardMarkup markupInline = new InlineKeyboardMarkup();
+            List<List<InlineKeyboardButton>> rowsInline = new ArrayList<>();
+
+            Inventory inventory = world.getPlayer().getInventory();
+            List<InlineKeyboardButton> rowInline = new ArrayList<>();
+            for (int i = 0; i < inventory.size(); i++) {
+                if (inventory.getItem(i) instanceof Weapon) {
+                    InlineKeyboardButton button = new InlineKeyboardButton();
+                    button.setText(EmojiParser.parseToUnicode(":crossed_swords: " + (i+1)));
+                    button.setCallbackData("pickAttack "+(i+1));
+                    rowInline.add(button);
+                }
+            }
+            rowsInline.add(rowInline);
+            // Set the keyboard to the markup
+            // Add it to the message
+            markupInline.setKeyboard(rowsInline);
+            return markupInline;
         }
 
         @Override
@@ -430,6 +486,50 @@ public class BotoTungeon extends TelegramLongPollingCommandBot {
         }
     }
 
+    class SaveCommand extends GameCommand {
+        @Override
+        protected void doGameCommand(String[] args) {
+            new WorldFactory().save(world, "chat_" + chatId + ".json");
+            world.getUi().flush();
+            reply(EmojiParser.parseToUnicode(":white_check_mark: Successfully saved!"));
+        }
+
+        @Override
+        public String getCommandIdentifier() {
+            return "save";
+        }
+
+        @Override
+        public String getDescription() {
+            return "Save your current game state.";
+        }
+    }
+
+    class LoadCommand extends BaseCommand {
+        @Override
+        protected void doCommand(String[] arguments) {
+            World world = new WorldFactory().load("chat_" + chatId + ".json");
+            if (world == null) {
+                reply(EmojiParser.parseToUnicode(":no_entry: No save file found!"));
+                return;
+            }
+            world.setUi(new UITelegramOutput());
+            world.printState();
+            reply(world.getUi().flush(), mainKeyboard(world));
+            worlds.put(chatId, world);
+        }
+
+        @Override
+        public String getCommandIdentifier() {
+            return "load";
+        }
+
+        @Override
+        public String getDescription() {
+            return "load saved game.";
+        }
+    }
+
     class NewGameCommand extends BaseCommand {
         @Override
         protected void doCommand(String[] arguments) {
@@ -466,7 +566,14 @@ public class BotoTungeon extends TelegramLongPollingCommandBot {
         JSONArray wl = config.optJSONArray("whitelist", new JSONArray());
         whitelist.clear();
         for (int i = 0; i < wl.length(); i++) {
-            whitelist.add(wl.getLong(i));
+            long chatId = wl.getLong(i);
+            whitelist.add(chatId);
+        }
+    }
+
+    public void afterStart() {
+        for (long chatId : whitelist) {
+            createMenu(chatId);
         }
     }
 

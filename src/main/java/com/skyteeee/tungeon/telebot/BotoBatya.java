@@ -29,6 +29,7 @@ public class BotoBatya {
             try {
                 botsApi = new TelegramBotsApi(DefaultBotSession.class);
                 botsApi.registerBot(boto);
+                boto.afterStart();
             } catch (TelegramApiException e) {
                 e.printStackTrace();
             }

@@ -6,7 +6,7 @@ public class AwaitingTakeCommand extends AwaitingCommand{
     @Override
     public void process(World world, int choice) {
         try {
-            world.give(choice-1);
+            world.give(choice);
             world.printState();
             world.setAwaitingCommand(null);
         } catch (Exception e) {
