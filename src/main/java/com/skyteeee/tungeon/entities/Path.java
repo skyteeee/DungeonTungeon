@@ -1,6 +1,7 @@
 package com.skyteeee.tungeon.entities;
 
 import com.skyteeee.tungeon.storage.Storage;
+import com.skyteeee.tungeon.utils.UserInterface;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -70,12 +71,12 @@ public class Path extends EntityClass {
     public Place getDestination(Place location) {
         int locationId = location.getId();
         int destinationId = locationId == places[0] ? places[1] : places[0];
-        return Storage.getInstance().getPlace(destinationId);
+        return getWorld().getStorage().getPlace(destinationId);
     }
 
     public Place[] unlink() {
         Place[] unlinked = new Place[places.length];
-        Storage storage = Storage.getInstance();
+        Storage storage = getWorld().getStorage();
         unlinked[0] = storage.getPlace(places[0]);
         unlinked[1] = storage.getPlace(places[1]);
         unlinked[0].removePath(this);
@@ -87,16 +88,16 @@ public class Path extends EntityClass {
         this.title = title;
     }
 
-    private boolean hasVisited(Character character) {
+    public boolean hasVisited(Character character) {
         return playersVisited.contains(character.getId());
     }
 
     public void printState(int index, Player player, Place current) {
         if (hasVisited(player)) {
-            System.out.printf("%d. %s -> %s\n", index, getTitle(), getDestination(current).getTitle());
+            getWorld().getUi().println(index + ". " + getTitle() + " -> " + getDestination(current).getTitle());
 
         } else {
-            System.out.printf("%d. %s\n", index, getTitle());
+            getWorld().getUi().println(index + ". " + getTitle());
         }
     }
 

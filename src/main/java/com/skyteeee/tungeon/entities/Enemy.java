@@ -1,5 +1,6 @@
 package com.skyteeee.tungeon.entities;
 
+import com.skyteeee.tungeon.World;
 import com.skyteeee.tungeon.entities.items.Armor;
 import com.skyteeee.tungeon.entities.items.Item;
 import com.skyteeee.tungeon.entities.items.Weapon;
@@ -13,7 +14,7 @@ import java.util.List;
 
 public class Enemy extends EntityClass implements Character{
     private int currentPlaceId;
-    private Inventory inventory = new Inventory();
+    private Inventory inventory;
     private int currentArmor = 0;
     private String title;
     private int weaponIdx = 0;
@@ -26,8 +27,10 @@ public class Enemy extends EntityClass implements Character{
 
     private boolean usedTurn = false;
 
-    public Enemy(int level) {
+    public Enemy(int level, World world) {
         this.level = level;
+        this.setWorld(world);
+        inventory = new Inventory(world);
         health = INITIAL_HEALTH;
     }
 
@@ -53,12 +56,12 @@ public class Enemy extends EntityClass implements Character{
 
     @Override
     public Place getCurrentPlace() {
-        return (Place) Storage.getInstance().getEntity(currentPlaceId);
+        return (Place) getWorld().getStorage().getEntity(currentPlaceId);
     }
 
     public Armor getArmor() {
         if (currentArmor == 0) return null;
-        return (Armor)Storage.getInstance().getItem(currentArmor);
+        return (Armor)getWorld().getStorage().getItem(currentArmor);
     }
 
     public int getArmorId() {
@@ -111,14 +114,14 @@ public class Enemy extends EntityClass implements Character{
     }
 
     public void printState() {
-        System.out.print(title + " ");
+        getWorld().getUi().print(title + " ");
         if (weaponIdx != -1) {
-            System.out.print("holding a " + inventory.getItem(weaponIdx).getTitle());
+            getWorld().getUi().print("holding a " + inventory.getItem(weaponIdx).getTitle());
         }
         if (currentArmor != 0) {
-            System.out.print("; it is wearing " + getArmor().getShortTitle());
+            getWorld().getUi().print("; it is wearing " + getArmor().getShortTitle());
         }
-        System.out.println();
+        getWorld().getUi().println();
     }
 
     private int xpOnDeath(Character killer) {
@@ -136,18 +139,18 @@ public class Enemy extends EntityClass implements Character{
             armor.applyDamage(weapon.getDamage());
             damage = (int)(weapon.getDamage() * armor.getAbsorption()) - armor.getDefence();
             if (armor.getDurability() <= 0) {
-                Storage.getInstance().removeEntity(armor);
+                getWorld().getStorage().removeEntity(armor);
                 currentArmor = 0;
-                UserInterface.slowPrint(title + "'s " + armor.getShortTitle() + " broke.");
+                getWorld().getUi().slowPrint(title + "'s " + armor.getShortTitle() + " broke.");
             }
         }
         damage = Math.max(damage, 5);
         health -= damage;
         weapon.applyDamage(weapon.getDamage());
-        UserInterface.slowPrint("Dealt " + damage + " damage. ");
+        getWorld().getUi().slowPrint("Dealt " + damage + " damage. ");
         if (!checkDeath()) {
-            UserInterface.slowPrint(getTitle() + " has survived your attack. It has " + health + " health remaining. \n");
-            int currentTurn = Storage.getInstance().getTurn();
+            getWorld().getUi().slowPrint(getTitle() + " has survived your attack. It has " + health + " health remaining. \n");
+            int currentTurn = getWorld().getStorage().getTurn();
             attack(attacker, getCurrentWeapon());
             alertHoard(attacker, currentTurn);
         } else {
@@ -169,7 +172,7 @@ public class Enemy extends EntityClass implements Character{
         Place curentPlace = getCurrentPlace();
         for (int i = 0; i < curentPlace.getEnemyAmount(); i++) {
             Enemy dude = curentPlace.getEnemy(i);
-            if (dude != this && aggressor.getHealth() > 0 && Storage.getInstance().getTurn() == currentTurn) dude.callToArms(aggressor);
+            if (dude != this && aggressor.getHealth() > 0 && getWorld().getStorage().getTurn() == currentTurn) dude.callToArms(aggressor);
         }
     }
 
@@ -180,7 +183,7 @@ public class Enemy extends EntityClass implements Character{
             if (enemyAmount == 1 || enemyAmount >= EntityFactory.rnd.nextInt(2, 4)) {
                 moveSomewhere(currentPlace);
             } else {
-                System.out.println("LOG: Enemy did not move. There are " + enemyAmount + " enemies at " + currentPlace.getId());
+                getWorld().getUi().log("Enemy did not move. There are " + enemyAmount + " enemies at " + currentPlace.getId());
             }
         }
         usedTurn = false;
@@ -194,7 +197,7 @@ public class Enemy extends EntityClass implements Character{
         for (Place place : choices) {
             if (place.getPlayerAmount() >= 1) {
                 destination = place;
-                System.out.println("LOG: Enemy moved towards PLAYER!!! Into " + destination.getId());
+                getWorld().getUi().println("LOG: Enemy moved towards PLAYER!!! Into " + destination.getId());
                 break;
             }
         }
@@ -206,7 +209,7 @@ public class Enemy extends EntityClass implements Character{
         if (EntityFactory.rnd.nextFloat() < mergeChance && destination.getEnemyAmount() > 1
                 && destination.getPlayerAmount() == 0) {
             int amount = destination.getEnemyAmount();
-            System.out.println("[LOG] attempting merge at " + currentPlaceId);
+            getWorld().getUi().log("attempting merge at " + currentPlaceId);
             for (int i = 0; i < amount; i++) {
                 Enemy e = destination.getEnemy(i);
                 if (e.getId() != getId()) {
@@ -215,7 +218,7 @@ public class Enemy extends EntityClass implements Character{
                 }
             }
         }
-        //System.out.println("LOG: Enemy " + getTitle() + " moved from " + currentPlace.getId() + " to " + destination.getId() +
+        //getWorld().getUi().println("LOG: Enemy " + getTitle() + " moved from " + currentPlace.getId() + " to " + destination.getId() +
         //        ". There are now " + destination.getEnemyAmount() + " enemies there.");
     }
 
@@ -228,14 +231,14 @@ public class Enemy extends EntityClass implements Character{
                 weapon = Weapon.BARE_HANDS;
             }
         }
-        UserInterface.slowPrint(getTitle() + " attacks " + target.getTitle() + " with " + weapon.getTitle() + ". \n");
+        getWorld().getUi().slowPrint(getTitle() + " attacks " + target.getTitle() + " with " + weapon.getTitle() + ". \n");
         usedTurn = true;
         target.defend(this, weapon);
         if (weaponIdx != -1 && weapon.getDurability() <= 0) {
             inventory.removeItem(weapon);
-            Storage.getInstance().removeEntity(weapon);
+            getWorld().getStorage().removeEntity(weapon);
             weaponIdx = -1;
-            System.out.println(title + "'s " + weapon.getTitle() + " broke.");
+            getWorld().getUi().println(title + "'s " + weapon.getTitle() + " broke.");
         }
     }
 
@@ -245,12 +248,12 @@ public class Enemy extends EntityClass implements Character{
 
     private boolean checkDeath() {
         if (health <= 0) {
-            System.out.println("KILLED: " + title);
+            getWorld().getUi().println("KILLED: " + title);
             inventory.dropAll(getCurrentPlace());
             Place place = getCurrentPlace();
             getArmor().drop(place);
             place.removeEnemy(this);
-            Storage.getInstance().removeEntity(this);
+            getWorld().getStorage().removeEntity(this);
             return true;
         }
         return false;

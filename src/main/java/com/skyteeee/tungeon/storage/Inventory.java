@@ -1,10 +1,12 @@
 package com.skyteeee.tungeon.storage;
 
+import com.skyteeee.tungeon.World;
 import com.skyteeee.tungeon.entities.Place;
 import com.skyteeee.tungeon.entities.items.Armor;
 import com.skyteeee.tungeon.entities.items.Item;
 import com.skyteeee.tungeon.entities.items.Weapon;
 import com.skyteeee.tungeon.utils.Savable;
+import com.skyteeee.tungeon.utils.UserInterface;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -15,13 +17,15 @@ public class Inventory implements Savable {
     private final List<Integer> inventory = new ArrayList<>();
 
     private final int maxSize;
+    private World world;
 
-    public Inventory() {
-        this(3);
+    public Inventory(World world) {
+        this(3, world);
     }
 
-    public Inventory(int maxSize) {
+    public Inventory(int maxSize, World world) {
         this.maxSize = maxSize;
+        this.world = world;
     }
 
     public Item addItem(Item item) {
@@ -47,7 +51,7 @@ public class Inventory implements Savable {
     }
 
     public Item getItem(int index) {
-        Storage storage = Storage.getInstance();
+        Storage storage = world.getStorage();
         return storage.getItem(inventory.get(index));
     }
 
@@ -60,24 +64,24 @@ public class Inventory implements Savable {
     }
 
     public void printState(boolean detailed) {
-        Storage storage = Storage.getInstance();
+        Storage storage = world.getStorage();
         for(int i = 0; i < inventory.size(); i++) {
             Item item = storage.getItem(inventory.get(i));
-            System.out.print((i+1) + ": " + item.getTitle());
+            world.getUi().print((i+1) + ": " + item.getTitle());
             if (detailed) {
                 if (item instanceof Weapon weapon) {
-                    System.out.print(" | Damage: " + weapon.getDamage());
+                    world.getUi().print(" | Damage: " + weapon.getDamage());
                 }
                 if (item instanceof Armor armor) {
-                    System.out.print(" | Absorption: " + armor.getAbsorption(true) + "; Defence: " + armor.getDefence());
+                    world.getUi().print(" | Absorption: " + armor.getAbsorption(true) + "; Defence: " + armor.getDefence());
                 }
-                System.out.println();
-            } else System.out.println();
+                world.getUi().println();
+            } else world.getUi().println();
         }
     }
 
     public void dropAll(Place place) {
-        Storage storage = Storage.getInstance();
+        Storage storage = world.getStorage();
         for(int i = 0; i < inventory.size(); i++) {
             Item item = storage.getItem(inventory.get(i));
             item.drop(place);

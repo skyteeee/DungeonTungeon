@@ -5,6 +5,7 @@ import com.skyteeee.tungeon.entities.Path;
 import com.skyteeee.tungeon.entities.Place;
 import com.skyteeee.tungeon.entities.Player;
 import com.skyteeee.tungeon.entities.items.Item;
+import com.skyteeee.tungeon.storage.Inventory;
 import com.skyteeee.tungeon.storage.Storage;
 import com.skyteeee.tungeon.utils.*;
 import org.json.JSONObject;
@@ -15,11 +16,35 @@ import java.util.List;
 public class World implements GameObject, Savable {
     private Player player;
     private int spawnId;
-    private EntityFactory factory;
+    private final EntityFactory factory;
+    private final Storage storage;
+    private UIOutput ui = new UIOutput();
     private int totalPlaces = 10;
+    private AwaitingCommand awaitingCommand = null;
 
-    public World (EntityFactory factory) {
-        this.factory = factory;
+    public World () {
+        this.storage = new Storage();
+        this.factory = new EntityFactory(this);
+
+    }
+
+    public void setAwaitingCommand(AwaitingCommand command) {
+        awaitingCommand = command;
+    }
+
+    public AwaitingCommand getAwaitingCommand() {
+        return awaitingCommand;
+    }
+
+    public UIOutput getUi() {
+        return ui;
+    }
+    public void setUi(UIOutput ui) {
+        this.ui = ui;
+    }
+
+    public Storage getStorage() {
+        return storage;
     }
 
     public void setTotalPlaces(int places) {
@@ -38,7 +63,7 @@ public class World implements GameObject, Savable {
     }
 
     public Place getSpawn() {
-        return Storage.getInstance().getPlace(spawnId);
+        return storage.getPlace(spawnId);
     }
 
     public EntityFactory getFactory() {
@@ -46,13 +71,14 @@ public class World implements GameObject, Savable {
     }
 
     public void printState() {
-        System.out.println();
-        UserInterface.strike();
+        ui.println();
+        ui.strike();
         player.getCurrentPlace().printState(player);
     }
 
     private void nextTurn() {
-        Storage instance = Storage.getInstance();
+        Storage instance = storage;
+        awaitingCommand = null;
         List<Enemy> enemies = instance.getAllOfType(Enemy.class);
         List<Player> players = instance.getAllOfType(Player.class);
         for (Enemy enemy : enemies) {
@@ -63,7 +89,7 @@ public class World implements GameObject, Savable {
         for (Player playa : players) {
             playa.onTurn();
         }
-        Storage.getInstance().nextTurn();
+        instance.nextTurn();
     }
 
     public void give(int choice) {
@@ -75,14 +101,38 @@ public class World implements GameObject, Savable {
         player.getCurrentPlace().take(item);
     }
 
+    public void give() {
+        Inventory inventory = player.getCurrentPlace().getInventory();
+        ui.println("Please choose an item to take: ");
+        inventory.printState(true);
+        setAwaitingCommand(new AwaitingTakeCommand());
+    }
+
+
     public void attack(int enemyIdx, UserInterface ui) {
         player.attack(enemyIdx, ui);
         nextTurn();
     }
 
+    public boolean attack(int enemyIdx) {
+        if (player.attack(enemyIdx)) {
+            nextTurn();
+            return true;
+        }
+        return false;
+    }
+
+    public boolean attack(int enemyIdx, int weaponIdx) {
+        if (player.attack(enemyIdx, weaponIdx)) {
+            nextTurn();
+            return true;
+        }
+        return false;
+    }
+
     public void onPlayerDeath() {
         player.resurrect(getSpawn());
-        Storage.getInstance().resetTurn();
+        storage.resetTurn();
     }
 
     public boolean move(int choice) {
@@ -149,7 +199,7 @@ public class World implements GameObject, Savable {
         setSpawn(object.getInt("spawn"));
         int playerId = object.optInt("player", 0);
         if (playerId != 0) {
-            setPlayer((Player) Storage.getInstance().getEntity(playerId));
+            setPlayer((Player) storage.getEntity(playerId));
         }
     }
 }

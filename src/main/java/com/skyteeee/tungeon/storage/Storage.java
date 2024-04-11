@@ -7,10 +7,13 @@ import java.util.*;
 
 public class Storage {
 
+    /*
     static Storage instance = new Storage();
     public static Storage getInstance() {
         return instance;
     }
+
+     */
 
     int nextId = 1;
 
