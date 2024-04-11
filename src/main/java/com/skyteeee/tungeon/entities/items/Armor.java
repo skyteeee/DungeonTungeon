@@ -6,7 +6,7 @@ import com.skyteeee.tungeon.utils.EntityFactory;
 import com.skyteeee.tungeon.utils.UserInterface;
 import org.json.JSONObject;
 
-public class Armor extends EntityClass implements Item {
+public class Armor extends EntityClass implements Breakable {
 
     private String title;
     private float dropChance;

@@ -3,6 +3,7 @@ package com.skyteeee.tungeon.entities;
 import com.skyteeee.tungeon.World;
 import com.skyteeee.tungeon.entities.items.Armor;
 import com.skyteeee.tungeon.entities.items.Item;
+import com.skyteeee.tungeon.entities.items.Treasure;
 import com.skyteeee.tungeon.entities.items.Weapon;
 import com.skyteeee.tungeon.storage.Inventory;
 import com.skyteeee.tungeon.storage.Storage;
@@ -77,10 +78,26 @@ public class Player extends EntityClass implements Character {
     @Override
     public void take(int choice) {
         Item item = getCurrentPlace().give(choice);
-        Item popped = inventory.addItem(item);
-        if (popped != null) {
-            getCurrentPlace().take(popped);
+        boolean merged = false;
+        if (item instanceof Treasure treasure) {
+            for (int idx = 0; idx < inventory.size(); idx++){
+                Item it = inventory.getItem(idx);
+                if (it instanceof Treasure itreasure && itreasure.getTitle().equals(treasure.getTitle())) {
+                    itreasure.setAmount(itreasure.getAmount() + treasure.getAmount());
+                    world.getStorage().removeEntity(treasure);
+                    merged = true;
+                    break;
+                }
+            }
+
         }
+        if (!merged) {
+            Item popped = inventory.addItem(item);
+            if (popped != null) {
+                getCurrentPlace().take(popped);
+            }
+        }
+
         getWorld().getUi().println("You took a " + item.getTitle());
     }
 

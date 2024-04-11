@@ -3,6 +3,7 @@ package com.skyteeee.tungeon.utils;
 import com.skyteeee.tungeon.World;
 import com.skyteeee.tungeon.entities.*;
 import com.skyteeee.tungeon.entities.items.Armor;
+import com.skyteeee.tungeon.entities.items.Treasure;
 import com.skyteeee.tungeon.entities.items.Weapon;
 import com.skyteeee.tungeon.storage.Storage;
 
@@ -135,6 +136,29 @@ public class EntityFactory {
             "shotgun",
             "banana"
     };
+
+    static public class TreasureType {
+        public String name;
+        public int price;
+        public TreasureType(String name, int price) {
+            this.name = name;
+            this.price = price;
+        }
+    }
+
+
+    static TreasureType[] treasureTypes = new TreasureType[] {
+            new TreasureType("Gold :money_face:", 1),
+            new TreasureType("Diamond :gem:", 10),
+            new TreasureType("Ruby :rotating_light:", 5)
+    };
+
+    public static TreasureType getTreasureType(String name) {
+        for (TreasureType type : treasureTypes) {
+            if (type.name.equals(name)) return type;
+        }
+        return null;
+    }
 
     static EnemyAbility[] enemyDescriptors = new EnemyAbility[] {
             new EnemyAbility("grumpy", 0, 0, 0.6f),
@@ -314,6 +338,9 @@ public class EntityFactory {
     private static final int WEAPON_CHANCE = 50;
     private static final int ENEMY_CHANCE = 80;
     private static final int ARMOR_CHANCE = 40;
+    private static final int TREASURE_CHANCE = 90;
+
+    private static final int ENEMY_TREASURE_CHANCE = 90;
 
     public EntityFactory(World world) {
         this.world = world;
@@ -407,6 +434,10 @@ public class EntityFactory {
             }
         }
 
+        if (rnd.nextInt(100) < TREASURE_CHANCE) {
+            Treasure treasure = createTreasure(rnd.nextInt(5,10));
+            place.getInventory().addItem(treasure);
+        }
         return place;
     }
 
@@ -429,6 +460,9 @@ public class EntityFactory {
         enemy.setAttackChance(ability.attackChance);
         enemy.setMergeChance(rnd.nextFloat(0.01f, 0.1f));
         enemy.getInventory().addItem(createWeapon(level));
+        if (rnd.nextInt(100) < ENEMY_TREASURE_CHANCE) {
+            enemy.getInventory().addItem(createTreasure(rnd.nextInt(1,5)));
+        }
         enemy.setArmor(createArmor(level));
         return enemy;
     }
@@ -526,6 +560,20 @@ public class EntityFactory {
     public Enemy newEnemy(int level) {
         Enemy e =new Enemy(level, world);
         return e;
+    }
+
+
+    public Treasure createTreasure(int amount) {
+        Treasure treasure = newTreasure();
+        storage.addNewEntity(treasure);
+        treasure.setAmount(amount);
+        treasure.setDropChance(0.5f + rnd.nextFloat(0.5f));
+        treasure.setTitle(treasureTypes[rnd.nextInt(treasureTypes.length)].name);
+        return treasure;
+    }
+
+    public Treasure newTreasure() {
+        return new Treasure();
     }
 
     public Path createPath() {

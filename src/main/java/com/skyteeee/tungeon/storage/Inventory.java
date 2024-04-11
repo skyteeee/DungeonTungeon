@@ -4,6 +4,7 @@ import com.skyteeee.tungeon.World;
 import com.skyteeee.tungeon.entities.Place;
 import com.skyteeee.tungeon.entities.items.Armor;
 import com.skyteeee.tungeon.entities.items.Item;
+import com.skyteeee.tungeon.entities.items.Treasure;
 import com.skyteeee.tungeon.entities.items.Weapon;
 import com.skyteeee.tungeon.utils.Savable;
 import com.skyteeee.tungeon.utils.UserInterface;
@@ -20,7 +21,7 @@ public class Inventory implements Savable {
     private World world;
 
     public Inventory(World world) {
-        this(3, world);
+        this(5, world);
     }
 
     public Inventory(int maxSize, World world) {
@@ -74,6 +75,9 @@ public class Inventory implements Savable {
                 }
                 if (item instanceof Armor armor) {
                     world.getUi().print(" | Absorption: " + armor.getAbsorption(true) + "; Defence: " + armor.getDefence());
+                }
+                if (item instanceof Treasure treasure) {
+                    world.getUi().print(" | Amount: " + treasure.getAmount());
                 }
                 world.getUi().println();
             } else world.getUi().println();

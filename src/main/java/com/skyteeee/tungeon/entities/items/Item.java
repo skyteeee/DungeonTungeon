@@ -13,14 +13,5 @@ public interface Item extends Entity {
 
     void drop(Place place);
 
-    void setDurability(float durability);
-
-    float getDurability();
-
-    void setResistance(float resistance);
-
-    float getResistance();
-
-    void applyDamage(int damage);
 
 }
