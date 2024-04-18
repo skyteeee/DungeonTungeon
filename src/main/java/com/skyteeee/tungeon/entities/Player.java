@@ -297,7 +297,8 @@ public class Player extends EntityClass implements Character {
             getWorld().getUi().println("YOU DIED. HOW PITIFUL...");
             Place place = getCurrentPlace();
             inventory.dropAll(place);
-            getArmor().drop(place);
+            Armor armor = getArmor();
+            if (armor != null) armor.drop(place);
             setArmor(0);
             world.onPlayerDeath();
             return true;

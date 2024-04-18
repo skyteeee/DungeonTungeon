@@ -17,6 +17,41 @@ public class EntityFactory {
     private static final float DEFENCE_CONSTANT = 0.07912f;
     private static final float ABSORPTION_CONSTANT = 0.0791f;
     private static final float ENEMY_HEALTH_CONSTANT = 0.1f;
+
+    static String[] merchantNames = new String[] {
+            "Eren",
+            "David",
+            "Michael",
+            "Joshua",
+            "Elijah",
+            "Dan",
+            "Natasha",
+            "Lord Voldemort",
+            "Leo the King",
+            "Stella",
+            "Sophia",
+            "Mary",
+            "Miranda",
+            "Judy",
+            "Bethany",
+            "Gretta"
+    };
+
+    static String[] merchantFeats = new String[] {
+            "greatest",
+            "strongest",
+            "wise",
+            "courageous",
+            "conqueror",
+            "fair",
+            "greedy",
+            "beautiful",
+            "fool",
+            "trickster",
+            "smart",
+            "witty"
+    };
+
     static String[] colors = new String[] {
             "black",
             "white",
@@ -339,6 +374,7 @@ public class EntityFactory {
     private static final int ENEMY_CHANCE = 80;
     private static final int ARMOR_CHANCE = 40;
     private static final int TREASURE_CHANCE = 90;
+    private static final int MERCHANT_CHANCE = 90;
 
     private static final int ENEMY_TREASURE_CHANCE = 90;
 
@@ -409,6 +445,21 @@ public class EntityFactory {
         return a;
     }
 
+    public Merchant createMerchant() {
+        Merchant guy = newMerchant();
+        storage.addNewEntity(guy);
+        String name = merchantNames[rnd.nextInt(merchantNames.length)];
+        String feat = merchantFeats[rnd.nextInt(merchantFeats.length)];
+        guy.setTitle(name + " the " + feat);
+        Merchant.Skill[] skills = Merchant.Skill.values();
+        guy.setSkill(skills[rnd.nextInt(skills.length)]);
+        return guy;
+    }
+
+    public Merchant newMerchant() {
+        return new Merchant(world);
+    }
+
 
     public Place createPlace (World world) {
         Place place = newPlace();
@@ -438,6 +489,12 @@ public class EntityFactory {
             Treasure treasure = createTreasure(rnd.nextInt(5,10));
             place.getInventory().addItem(treasure);
         }
+
+        if (rnd.nextInt(100) < MERCHANT_CHANCE) {
+            Merchant merchant = createMerchant();
+            merchant.setCurrentPlace(place);
+        }
+
         return place;
     }
 
