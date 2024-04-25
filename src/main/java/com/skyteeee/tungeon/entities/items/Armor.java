@@ -94,6 +94,7 @@ public class Armor extends EntityClass implements Breakable {
         this.defence = defence;
     }
 
+    //during attack, damage is multiplied by raw absorption. simple absorption (inverted) is how much is ACTUALLY being ABSORBED. sorry.
     public float getAbsorption() {
         return getAbsorption(false);
     }

@@ -12,7 +12,7 @@ import org.json.JSONObject;
 
 import java.util.List;
 
-public class Enemy extends CharacterClass{
+public class Enemy extends CharacterClass implements Turnable{
     private int currentArmor = 0;
     private int weaponIdx = 0;
     private float mergeChance = 0f;
@@ -143,6 +143,7 @@ public class Enemy extends CharacterClass{
         }
     }
 
+    @Override
     public void onTurn() {
         if (!usedTurn) {
             Place currentPlace = getCurrentPlace();

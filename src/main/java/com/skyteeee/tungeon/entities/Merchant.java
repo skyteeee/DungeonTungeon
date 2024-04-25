@@ -1,17 +1,19 @@
 package com.skyteeee.tungeon.entities;
-
 import com.skyteeee.tungeon.World;
-import com.skyteeee.tungeon.entities.items.Item;
-import com.skyteeee.tungeon.entities.items.Weapon;
+import com.skyteeee.tungeon.entities.items.*;
 import com.skyteeee.tungeon.storage.Inventory;
+import com.skyteeee.tungeon.utils.EntityFactory;
 import org.json.JSONObject;
 
-public class Merchant extends CharacterClass{
+public class Merchant extends CharacterClass implements Turnable{
 
     public Merchant(World world) {
         setWorld(world);
+        shopCycle = EntityFactory.rnd.nextInt(3,10);
         inventory = new Inventory(world);
     }
+
+    int shopCycle;
 
     public enum Skill {
         REPAIR, ARMOR, WEAPON
@@ -45,6 +47,88 @@ public class Merchant extends CharacterClass{
     @Override
     public void defend(Character attacker, Weapon weapon) {
 
+    }
+
+    @Override
+    public void onTurn() {
+        if (world.getStorage().getTurn() % shopCycle == 0) {
+            clearShop();
+        }
+    }
+
+    private void clearShop() {
+        inventory.clearAll(true);
+    }
+
+    public void printState() {
+        world.getUi().println("As you talk to " + getTitle() + ", they offer you this: ");
+        if (inventory.isEmpty()) {
+            populateShop();
+        }
+        inventory.printState(false);
+
+    }
+
+    private void populateShop() {
+        EntityFactory factory = new EntityFactory(world);
+        Player player = world.getPlayer();
+        int lvl = player.getLevel();
+        switch (skill) {
+            case ARMOR:
+                for (int i = 0; i < 3; i++) {
+                    Armor arm = factory.createArmor(lvl);
+                    Sellable sellable = factory.createSellable(arm);
+                    int price = Math.max(2,(int)(arm.getDefence()/arm.getAbsorption())/(3 * lvl));
+                    sellable.setPrice(price);
+                    sellable.setTitle(price + " :rotating_light: | " + arm.getTitle(true) + " | Def: " + arm.getDefence() + " Abs: " + arm.getAbsorption(true));
+                    inventory.addItem(sellable);
+                }
+                break;
+            case WEAPON:
+                for (int i = 0; i < 3; i++) {
+                    Weapon wp = factory.createWeapon(lvl);
+                    Sellable sellable = factory.createSellable(wp);
+                    int price = Math.max(2,wp.getDamage()/(3 * lvl));
+                    sellable.setPrice(price);
+                    sellable.setTitle(price + " :gem: | " + wp.getTitle(true) + " | Damage: " + wp.getDamage());
+                    inventory.addItem(sellable);
+                }
+                break;
+            case REPAIR:
+                Inventory playerInventory = player.getInventory();
+                for (int i = 0; i < playerInventory.size(); i++) {
+                    if (playerInventory.getItem(i) instanceof Weapon weapon) {
+                        Sellable sellable = factory.createSellable(weapon);
+                        float fullDurability = 666f + 3 * lvl;
+                        int price =  Math.max(2,(int)(fullDurability - weapon.getDurability())/(3 * lvl));
+                        sellable.setPrice(price);
+                        sellable.setTitle(price + " :money_face: | " + weapon.getTitle() + " restored to durability: " + fullDurability);
+                        inventory.addItem(sellable);
+                    }
+
+                    if (playerInventory.getItem(i) instanceof Armor armor) {
+                        Sellable sellable = factory.createSellable(armor);
+                        float fullDurability = 400f + 3 * lvl;
+                        int price =  Math.max(2,(int)(fullDurability - armor.getDurability())/(2 * lvl));
+                        sellable.setPrice(price);
+                        sellable.setTitle(price + " :money_face: | " + armor.getTitle() + " restored to durability: " + fullDurability);
+                        inventory.addItem(sellable);
+                    }
+
+                }
+
+                Armor armor = player.getArmor();
+                if (armor != null) {
+                    Sellable sellable = factory.createSellable(armor);
+                    float fullDurability = 400f + 3 * lvl;
+                    int price =  Math.max(2,(int)(fullDurability - armor.getDurability())/(2 * lvl));
+                    sellable.setPrice(price);
+                    sellable.setTitle(price + " :money_face: | " + armor.getTitle() + " restored to durability: " + fullDurability);
+                    inventory.addItem(sellable);
+                }
+                break;
+
+        }
     }
 
     @Override

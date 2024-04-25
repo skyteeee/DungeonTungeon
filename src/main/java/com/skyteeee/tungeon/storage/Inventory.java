@@ -29,6 +29,18 @@ public class Inventory implements Savable {
         this.world = world;
     }
 
+    public void clearAll(boolean removeFromStorage) {
+        if (removeFromStorage) {
+            Storage storage = world.getStorage();
+            for (int id : inventory) {
+                storage.removeEntity(storage.getEntity(id));
+            }
+        }
+        inventory.clear();
+    }
+
+
+
     public Item addItem(Item item) {
         Item popped = null;
         if (inventory.size() >= maxSize) {

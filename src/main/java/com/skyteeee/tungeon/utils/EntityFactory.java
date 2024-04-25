@@ -2,9 +2,7 @@ package com.skyteeee.tungeon.utils;
 
 import com.skyteeee.tungeon.World;
 import com.skyteeee.tungeon.entities.*;
-import com.skyteeee.tungeon.entities.items.Armor;
-import com.skyteeee.tungeon.entities.items.Treasure;
-import com.skyteeee.tungeon.entities.items.Weapon;
+import com.skyteeee.tungeon.entities.items.*;
 import com.skyteeee.tungeon.storage.Storage;
 
 import java.util.Arrays;
@@ -458,6 +456,19 @@ public class EntityFactory {
 
     public Merchant newMerchant() {
         return new Merchant(world);
+    }
+
+    public Sellable createSellable(Item toSell) {
+        Sellable sellable = newSellable();
+        storage.addNewEntity(sellable);
+        sellable.setItemId(toSell.getId());
+        return sellable;
+    }
+
+    public Sellable newSellable() {
+        Sellable s = new Sellable();
+        s.setWorld(world);
+        return s;
     }
 
 

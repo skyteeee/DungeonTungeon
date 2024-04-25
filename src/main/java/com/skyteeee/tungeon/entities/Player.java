@@ -11,7 +11,7 @@ import com.skyteeee.tungeon.utils.AwaitingAttackCommand;
 import com.skyteeee.tungeon.utils.UserInterface;
 import org.json.JSONObject;
 
-public class Player extends EntityClass implements Character {
+public class Player extends EntityClass implements Character, Turnable {
     private int currentPlaceId;
     private int currentArmor;
     private final Inventory inventory;
@@ -109,6 +109,7 @@ public class Player extends EntityClass implements Character {
         return item;
     }
 
+    @Override
     public void onTurn() {
         turnsSinceDamaged++;
         if (turnsSinceDamaged > 3) {

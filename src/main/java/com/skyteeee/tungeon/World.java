@@ -1,9 +1,6 @@
 package com.skyteeee.tungeon;
 
-import com.skyteeee.tungeon.entities.Enemy;
-import com.skyteeee.tungeon.entities.Path;
-import com.skyteeee.tungeon.entities.Place;
-import com.skyteeee.tungeon.entities.Player;
+import com.skyteeee.tungeon.entities.*;
 import com.skyteeee.tungeon.entities.items.Item;
 import com.skyteeee.tungeon.storage.Inventory;
 import com.skyteeee.tungeon.storage.Storage;
@@ -79,15 +76,11 @@ public class World implements GameObject, Savable {
     private void nextTurn() {
         Storage instance = storage;
         awaitingCommand = null;
-        List<Enemy> enemies = instance.getAllOfType(Enemy.class);
-        List<Player> players = instance.getAllOfType(Player.class);
-        for (Enemy enemy : enemies) {
-            if (instance.getEntity(enemy.getId()) != null) {
-                enemy.onTurn();
+        List<Turnable> turnables = instance.getAllOfType(Turnable.class);
+        for (Turnable turnable: turnables) {
+            if (instance.getEntity(turnable.getId()) != null) {
+                turnable.onTurn();
             }
-        }
-        for (Player playa : players) {
-            playa.onTurn();
         }
         instance.nextTurn();
     }

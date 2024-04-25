@@ -486,6 +486,23 @@ public class BotoTungeon extends TelegramLongPollingCommandBot {
         }
     }
 
+    class ShopCommand extends GameCommand {
+        @Override
+        protected void doGameCommand(String[] args) {
+
+        }
+
+        @Override
+        public String getCommandIdentifier() {
+            return "shop";
+        }
+
+        @Override
+        public String getDescription() {
+            return "exchange treasure for goods";
+        }
+    }
+
     class SaveCommand extends GameCommand {
         @Override
         protected void doGameCommand(String[] args) {
