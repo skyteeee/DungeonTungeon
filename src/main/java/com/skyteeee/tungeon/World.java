@@ -2,6 +2,7 @@ package com.skyteeee.tungeon;
 
 import com.skyteeee.tungeon.entities.*;
 import com.skyteeee.tungeon.entities.items.Item;
+import com.skyteeee.tungeon.entities.items.Sellable;
 import com.skyteeee.tungeon.storage.Inventory;
 import com.skyteeee.tungeon.storage.Storage;
 import com.skyteeee.tungeon.utils.*;
@@ -83,6 +84,13 @@ public class World implements GameObject, Savable {
             }
         }
         instance.nextTurn();
+    }
+
+    public void buy(int choice) {
+        Merchant merchant = player.getCurrentPlace().getMerchant();
+        Sellable item = (Sellable) merchant.give(choice);
+        if (item != null) player.buy(item,merchant.getSkill());
+        else ui.println("Invalid choice!");
     }
 
     public void give(int choice) {

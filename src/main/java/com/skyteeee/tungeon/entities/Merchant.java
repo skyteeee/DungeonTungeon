@@ -36,6 +36,11 @@ public class Merchant extends CharacterClass implements Turnable{
 
     @Override
     public Item give(int choice) {
+        if (choice < inventory.size()) {
+            Item item = inventory.getItem(choice);
+            inventory.removeItem(item);
+            return item;
+        }
         return null;
     }
 
@@ -80,7 +85,7 @@ public class Merchant extends CharacterClass implements Turnable{
                     Sellable sellable = factory.createSellable(arm);
                     int price = Math.max(2,(int)(arm.getDefence()/arm.getAbsorption())/(3 * lvl));
                     sellable.setPrice(price);
-                    sellable.setTitle(price + " :rotating_light: | " + arm.getTitle(true) + " | Def: " + arm.getDefence() + " Abs: " + arm.getAbsorption(true));
+                    sellable.setTitle(arm.getTitle(true) + " | Def: " + arm.getDefence() + " Abs: " + arm.getAbsorption(true) + " | " + price + " :rotating_light:");
                     inventory.addItem(sellable);
                 }
                 break;
@@ -88,9 +93,9 @@ public class Merchant extends CharacterClass implements Turnable{
                 for (int i = 0; i < 3; i++) {
                     Weapon wp = factory.createWeapon(lvl);
                     Sellable sellable = factory.createSellable(wp);
-                    int price = Math.max(2,wp.getDamage()/(3 * lvl));
+                    int price = Math.max(2,(wp.getDamage()/9)/(lvl));
                     sellable.setPrice(price);
-                    sellable.setTitle(price + " :gem: | " + wp.getTitle(true) + " | Damage: " + wp.getDamage());
+                    sellable.setTitle(wp.getTitle(true) + " | Damage: " + wp.getDamage() + " | " + price + " :gem:");
                     inventory.addItem(sellable);
                 }
                 break;
@@ -100,18 +105,20 @@ public class Merchant extends CharacterClass implements Turnable{
                     if (playerInventory.getItem(i) instanceof Weapon weapon) {
                         Sellable sellable = factory.createSellable(weapon);
                         float fullDurability = 666f + 3 * lvl;
+                        sellable.setProperty("durability", String.valueOf(fullDurability));
                         int price =  Math.max(2,(int)(fullDurability - weapon.getDurability())/(3 * lvl));
                         sellable.setPrice(price);
-                        sellable.setTitle(price + " :money_face: | " + weapon.getTitle() + " restored to durability: " + fullDurability);
+                        sellable.setTitle(weapon.getTitle() + " restored to durability: " + fullDurability + " | " + price + " :money_face:");
                         inventory.addItem(sellable);
                     }
 
                     if (playerInventory.getItem(i) instanceof Armor armor) {
                         Sellable sellable = factory.createSellable(armor);
-                        float fullDurability = 400f + 3 * lvl;
+                        float fullDurability = 400f + (400 * 0.13f * lvl);
+                        sellable.setProperty("durability", String.valueOf(fullDurability));
                         int price =  Math.max(2,(int)(fullDurability - armor.getDurability())/(2 * lvl));
                         sellable.setPrice(price);
-                        sellable.setTitle(price + " :money_face: | " + armor.getTitle() + " restored to durability: " + fullDurability);
+                        sellable.setTitle(armor.getTitle() + " restored to durability: " + fullDurability + " | " + price + " :money_face:");
                         inventory.addItem(sellable);
                     }
 
@@ -120,10 +127,11 @@ public class Merchant extends CharacterClass implements Turnable{
                 Armor armor = player.getArmor();
                 if (armor != null) {
                     Sellable sellable = factory.createSellable(armor);
-                    float fullDurability = 400f + 3 * lvl;
+                    float fullDurability = 400f + (400 * 0.13f * lvl);
+                    sellable.setProperty("durability", String.valueOf(fullDurability));
                     int price =  Math.max(2,(int)(fullDurability - armor.getDurability())/(2 * lvl));
                     sellable.setPrice(price);
-                    sellable.setTitle(price + " :money_face: | " + armor.getTitle() + " restored to durability: " + fullDurability);
+                    sellable.setTitle(armor.getTitle() + " restored to durability: " + fullDurability + " | " + price + " :money_face:");
                     inventory.addItem(sellable);
                 }
                 break;

@@ -4,6 +4,7 @@ import com.skyteeee.tungeon.World;
 import com.skyteeee.tungeon.entities.*;
 import com.skyteeee.tungeon.entities.Character;
 import com.skyteeee.tungeon.entities.items.Armor;
+import com.skyteeee.tungeon.entities.items.Sellable;
 import com.skyteeee.tungeon.entities.items.Treasure;
 import com.skyteeee.tungeon.entities.items.Weapon;
 import com.skyteeee.tungeon.storage.Storage;
@@ -156,6 +157,7 @@ public class WorldFactory {
         JSONArray enemiesArray = new JSONArray();
         JSONArray treasureArray = new JSONArray();
         JSONArray merchantArray = new JSONArray();
+        JSONArray sellableArray = new JSONArray();
 
         String fileName = fileNameString == null ? (loadedFrom == null ? FALLBACK_FILE_NAME : loadedFrom): fileNameString;
 
@@ -187,6 +189,9 @@ public class WorldFactory {
             if (entity instanceof Merchant) {
                 merchantArray.put(entity.serialize());
             }
+            if (entity instanceof Sellable) {
+                sellableArray.put(entity.serialize());
+            }
 
         }
 
@@ -199,6 +204,7 @@ public class WorldFactory {
         worldObject.put("turn", storage.getTurn());
         worldObject.put("treasure", treasureArray);
         worldObject.put("merchants", merchantArray);
+        worldObject.put("sellables", sellableArray);
 
         saveObject.put("world", worldObject);
         String toSave = saveObject.toString(2);
@@ -251,6 +257,7 @@ public class WorldFactory {
         JSONArray armorArray = worldObject.optJSONArray("armor", new JSONArray());
         JSONArray treasureArray = worldObject.optJSONArray("treasure", new JSONArray());
         JSONArray merchantArray = worldObject.optJSONArray("merchants", new JSONArray());
+        JSONArray sellableArray = worldObject.optJSONArray("sellables", new JSONArray());
         storage.setTurn(worldObject.optInt("turn", 0));
 
         for (int i = 0; i < enemiesArray.length(); i++) {
@@ -303,6 +310,13 @@ public class WorldFactory {
             Merchant guy = factory.newMerchant();
             guy.deserialize(merchantObject);
             storage.putEntity(guy);
+        }
+
+        for (int i = 0; i < sellableArray.length(); i++) {
+            JSONObject sellableObject = sellableArray.getJSONObject(i);
+            Sellable sellable = factory.newSellable();
+            sellable.deserialize(sellableObject);
+            storage.putEntity(sellable);
         }
 
         for (int i = 0; i < treasureArray.length(); i ++) {

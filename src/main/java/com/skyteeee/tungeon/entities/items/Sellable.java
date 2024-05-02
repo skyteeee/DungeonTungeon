@@ -4,10 +4,22 @@ import com.skyteeee.tungeon.entities.EntityClass;
 import com.skyteeee.tungeon.entities.Place;
 import org.json.JSONObject;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public class Sellable extends EntityClass implements Item{
     String title;
     int itemId;
+    private Map<String,String> properties = new HashMap<>();
     private int price;
+
+    public void setProperty(String key, String value) {
+        properties.put(key,value);
+    }
+
+    public String getProperty(String key) {
+        return properties.get(key);
+    }
 
     public void setItemId(int itemId) {
         this.itemId = itemId;
@@ -45,7 +57,9 @@ public class Sellable extends EntityClass implements Item{
     @Override
     public JSONObject serialize() {
         JSONObject object = new JSONObject();
+        JSONObject prop = new JSONObject(properties);
         object.put("id", getId());
+        object.put("props",prop);
         object.put("title", getTitle());
         object.put("itemId", getItemId());
         object.put("price", getPrice());
@@ -58,6 +72,10 @@ public class Sellable extends EntityClass implements Item{
         setTitle(object.getString("title"));
         setItemId(object.getInt("itemId"));
         setPrice(object.getInt("price"));
+        JSONObject props = object.optJSONObject("props", new JSONObject());
+        for (String key : props.keySet()) {
+            properties.put(key, props.getString(key));
+        }
     }
 
     public int getPrice() {

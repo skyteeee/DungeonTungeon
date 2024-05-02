@@ -1,10 +1,7 @@
 package com.skyteeee.tungeon.entities;
 
 import com.skyteeee.tungeon.World;
-import com.skyteeee.tungeon.entities.items.Armor;
-import com.skyteeee.tungeon.entities.items.Item;
-import com.skyteeee.tungeon.entities.items.Treasure;
-import com.skyteeee.tungeon.entities.items.Weapon;
+import com.skyteeee.tungeon.entities.items.*;
 import com.skyteeee.tungeon.storage.Inventory;
 import com.skyteeee.tungeon.storage.Storage;
 import com.skyteeee.tungeon.utils.AwaitingAttackCommand;
@@ -78,6 +75,70 @@ public class Player extends EntityClass implements Character, Turnable {
     @Override
     public void take(int choice) {
         Item item = getCurrentPlace().give(choice);
+        take(item);
+    }
+
+    public void buy(Sellable item, Merchant.Skill type) {
+
+        Treasure gold = null, diamond = null, ruby = null;
+        for (int i = 0; i < inventory.size(); i++) {
+            Item item1 = inventory.getItem(i);
+            if (item1 instanceof Treasure treasure) {
+                if (treasure.getTitle().startsWith("Gold")) gold = treasure;
+                if (treasure.getTitle().startsWith("Ruby")) ruby = treasure;
+                if (treasure.getTitle().startsWith("Diamond")) diamond = treasure;
+
+            }
+        }
+        switch (type) {
+            case REPAIR:
+                if (gold == null || gold.getAmount() < item.getPrice()) {
+                    world.getUi().println("You don't have enough GOLD!!!");
+                    return;
+                }
+                gold.setAmount(gold.getAmount() - item.getPrice());
+                for (int i = 0; i < inventory.size(); i++) {
+                    Item item1 = inventory.getItem(i);
+                    if (item1.getId() == item.getItemId()
+                            && (item1 instanceof Breakable breakable)) {
+                        breakable.setDurability(Float.parseFloat(item.getProperty("durability")));
+                        world.getUi().println("You have successfully repaired your " + breakable.getTitle());
+                        break;
+                    }
+                }
+
+                if (currentArmor == item.getItemId()) {
+                    getArmor().setDurability(Float.parseFloat(item.getProperty("durability")));
+                    world.getUi().println("You have successfully repaired your " + getArmor().getTitle());
+                }
+
+                break;
+            case ARMOR: {
+                if (ruby == null || ruby.getAmount() < item.getPrice()) {
+                    world.getUi().println("You don't have enough RUBIES!!!");
+                    return;
+                }
+                ruby.setAmount(ruby.getAmount() - item.getPrice());
+                Item bought = world.getStorage().getItem(item.getItemId());
+                take(bought);
+                world.getUi().println("You have successfully purchased a " + bought.getTitle());
+                break;
+            }
+            case WEAPON: {
+                if (diamond == null || diamond.getAmount() < item.getPrice()) {
+                    world.getUi().println("You don't have enough DIAMONDS!!!");
+                    return;
+                }
+                diamond.setAmount(diamond.getAmount() - item.getPrice());
+                Item bought = world.getStorage().getItem(item.getItemId());
+                take(bought);
+                world.getUi().println("You have successfully purchased a " + bought.getTitle());
+                break;
+            }
+        }
+    }
+
+    public void take(Item item) {
         boolean merged = false;
         if (item instanceof Treasure treasure) {
             for (int idx = 0; idx < inventory.size(); idx++){

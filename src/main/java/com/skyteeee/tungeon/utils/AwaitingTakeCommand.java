@@ -8,7 +8,6 @@ public class AwaitingTakeCommand extends AwaitingCommand{
         try {
             world.give(choice);
             world.printState();
-            world.setAwaitingCommand(null);
         } catch (Exception e) {
             world.getUi().println(":rage: Wrong choice! Please choose an item that exists.");
             world.give();
