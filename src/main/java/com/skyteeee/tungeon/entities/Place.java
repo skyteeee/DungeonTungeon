@@ -17,6 +17,7 @@ public class Place extends EntityClass {
     private List<Integer> paths = new ArrayList<>();
     private List<Integer> enemies = new ArrayList<>();
     private List<Integer> players = new ArrayList<>();
+    private int merchantId = -1;
 
     private String description;
     private String title;
@@ -25,7 +26,7 @@ public class Place extends EntityClass {
 
     public Place(World world) {
         setWorld(world);
-        inventory = new Inventory(10, world);
+        inventory = new Inventory(100, world);
     }
 
     public Item give(int choice) {
@@ -77,6 +78,24 @@ public class Place extends EntityClass {
         return getWorld().getStorage().getOfType(enemies.get(index), Enemy.class);
     }
 
+    public void setMerchant(Merchant merchant) {
+        if (merchant != null) merchantId = merchant.getId();
+        else merchantId = -1;
+    }
+
+    public void setMerchant(int id) {
+        merchantId = id;
+    }
+
+    public Merchant getMerchant() {
+        if (merchantId == -1) return null;
+        return world.getStorage().getOfType(merchantId, Merchant.class);
+    }
+
+    public int getMerchantId() {
+        return merchantId;
+    }
+
     public int getEnemyAmount() {
         return enemies.size();
     }
@@ -122,6 +141,8 @@ public class Place extends EntityClass {
         }
         object.put("players", playersArray);
 
+        object.put("merchant", getMerchantId());
+
         JSONArray pathsArray = new JSONArray();
         for (int id : paths) {
             pathsArray.put(id);
@@ -144,6 +165,8 @@ public class Place extends EntityClass {
         for (int i = 0; i < enemiesArray.length(); i++) {
             addEnemy(enemiesArray.getInt(i));
         }
+
+        setMerchant(object.optInt("merchant", -1));
 
         JSONArray playersArray = object.optJSONArray("players", new JSONArray());
         for (int i = 0; i < playersArray.length(); i++) {
@@ -180,6 +203,13 @@ public class Place extends EntityClass {
         Storage storage = getWorld().getStorage();
         getWorld().getUi().println("You are in " + description + " (" + getId() + ")");
         getWorld().getUi().strike();
+        Merchant merchant = getMerchant();
+        if (merchant != null) {
+            getWorld().getUi().println("To the side, you see " + merchant.getTitle() + ".");
+            getWorld().getUi().strike();
+        }
+
+
         if (!inventory.isEmpty()) {
             getWorld().getUi().println("You see the following items: ");
             inventory.printState(false);
@@ -202,6 +232,8 @@ public class Place extends EntityClass {
             path.printState(i+1, player, this);
         }
     }
+
+
 
 
 }

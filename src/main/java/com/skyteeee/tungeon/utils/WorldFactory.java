@@ -4,6 +4,8 @@ import com.skyteeee.tungeon.World;
 import com.skyteeee.tungeon.entities.*;
 import com.skyteeee.tungeon.entities.Character;
 import com.skyteeee.tungeon.entities.items.Armor;
+import com.skyteeee.tungeon.entities.items.Sellable;
+import com.skyteeee.tungeon.entities.items.Treasure;
 import com.skyteeee.tungeon.entities.items.Weapon;
 import com.skyteeee.tungeon.storage.Storage;
 import org.json.JSONArray;
@@ -153,12 +155,16 @@ public class WorldFactory {
         JSONArray weaponsArray = new JSONArray();
         JSONArray armorArray = new JSONArray();
         JSONArray enemiesArray = new JSONArray();
+        JSONArray treasureArray = new JSONArray();
+        JSONArray merchantArray = new JSONArray();
+        JSONArray sellableArray = new JSONArray();
 
         String fileName = fileNameString == null ? (loadedFrom == null ? FALLBACK_FILE_NAME : loadedFrom): fileNameString;
 
         Collection<Entity> entities = storage.getAllEntities();
 
         for (Entity entity : entities) {
+
             if (entity instanceof Place) {
                 placesArray.put(entity.serialize());
             }
@@ -177,6 +183,15 @@ public class WorldFactory {
             if (entity instanceof Armor) {
                 armorArray.put(entity.serialize());
             }
+            if (entity instanceof Treasure) {
+                treasureArray.put(entity.serialize());
+            }
+            if (entity instanceof Merchant) {
+                merchantArray.put(entity.serialize());
+            }
+            if (entity instanceof Sellable) {
+                sellableArray.put(entity.serialize());
+            }
 
         }
 
@@ -187,6 +202,9 @@ public class WorldFactory {
         worldObject.put("enemies", enemiesArray);
         worldObject.put("armor", armorArray);
         worldObject.put("turn", storage.getTurn());
+        worldObject.put("treasure", treasureArray);
+        worldObject.put("merchants", merchantArray);
+        worldObject.put("sellables", sellableArray);
 
         saveObject.put("world", worldObject);
         String toSave = saveObject.toString(2);
@@ -237,6 +255,9 @@ public class WorldFactory {
         JSONArray weaponsArray = worldObject.getJSONArray("weapons");
         JSONArray enemiesArray = worldObject.optJSONArray("enemies", new JSONArray());
         JSONArray armorArray = worldObject.optJSONArray("armor", new JSONArray());
+        JSONArray treasureArray = worldObject.optJSONArray("treasure", new JSONArray());
+        JSONArray merchantArray = worldObject.optJSONArray("merchants", new JSONArray());
+        JSONArray sellableArray = worldObject.optJSONArray("sellables", new JSONArray());
         storage.setTurn(worldObject.optInt("turn", 0));
 
         for (int i = 0; i < enemiesArray.length(); i++) {
@@ -282,6 +303,27 @@ public class WorldFactory {
             player.deserialize(playerObject);
             storage.putEntity(player);
             world.setPlayer(player);
+        }
+
+        for (int i = 0; i < merchantArray.length(); i ++) {
+            JSONObject merchantObject = merchantArray.getJSONObject(i);
+            Merchant guy = factory.newMerchant();
+            guy.deserialize(merchantObject);
+            storage.putEntity(guy);
+        }
+
+        for (int i = 0; i < sellableArray.length(); i++) {
+            JSONObject sellableObject = sellableArray.getJSONObject(i);
+            Sellable sellable = factory.newSellable();
+            sellable.deserialize(sellableObject);
+            storage.putEntity(sellable);
+        }
+
+        for (int i = 0; i < treasureArray.length(); i ++) {
+            JSONObject treasureObject = treasureArray.getJSONObject(i);
+            Treasure treasure = factory.newTreasure();
+            treasure.deserialize(treasureObject);
+            storage.putEntity(treasure);
         }
 
         world.deserialize(worldObject);

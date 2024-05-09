@@ -1,6 +1,7 @@
 package com.skyteeee.tungeon.telebot;
 
 import com.skyteeee.tungeon.World;
+import com.skyteeee.tungeon.entities.Merchant;
 import com.skyteeee.tungeon.entities.Place;
 import com.skyteeee.tungeon.entities.items.Armor;
 import com.skyteeee.tungeon.entities.items.Weapon;
@@ -122,7 +123,7 @@ public class BotoTungeon extends TelegramLongPollingCommandBot {
         KeyboardRow statusRow = new KeyboardRow();
         statusRow.add(EmojiParser.parseToUnicode("/stat :sparkling_heart:"));
         if (!place.getInventory().isEmpty()) statusRow.add(EmojiParser.parseToUnicode("/take :school_satchel:"));
-
+        if (place.getMerchant() != null) statusRow.add(EmojiParser.parseToUnicode("/shop :moneybag:"));
         // Add the first row to the keyboard
         keyboard.add(goRow);
         if (!attackRow.isEmpty()) keyboard.add(attackRow);
@@ -144,6 +145,9 @@ public class BotoTungeon extends TelegramLongPollingCommandBot {
             case "pickAttack" :
                 processAwait(chatId, parts[1]);
                 return;
+            case "pickabuy" :
+                processAwait(chatId, parts[1]);
+                return;
         }
 
         world.printState();
@@ -158,6 +162,7 @@ public class BotoTungeon extends TelegramLongPollingCommandBot {
             try {
                 command.process(world, Integer.parseInt(contents)-1);
                 sendMessage(chatId,world.getUi().flush(), mainKeyboard(world));
+                world.setAwaitingCommand(null);
             } catch (Exception e) {
                 sendMessage(chatId, "\uD83E\uDD21 We wanted a number...");
             }
@@ -204,6 +209,7 @@ public class BotoTungeon extends TelegramLongPollingCommandBot {
         register(new TakeCommand());
         register(new LoadCommand());
         register(new SaveCommand());
+        register(new ShopCommand());
         for (int i = 0; i < WorldFactory.maxPathsPerPlace; i++) {
             register(new GoCommand(i+1));
         }
@@ -483,6 +489,47 @@ public class BotoTungeon extends TelegramLongPollingCommandBot {
         @Override
         public String getDescription() {
             return "take an item from the ground";
+        }
+    }
+
+    class ShopCommand extends GameCommand {
+        @Override
+        protected void doGameCommand(String[] args) {
+            Merchant merchant = world.getPlayer().getCurrentPlace().getMerchant();
+            if (merchant != null) {
+                merchant.printState();
+                world.setAwaitingCommand(new AwaitingBuyCommand());
+                worldReply(generateKeyboard(merchant));
+            } else {
+                reply("Sorry, there is no one to trade with");
+            }
+        }
+
+        private ReplyKeyboard generateKeyboard(Merchant merchant) {
+            InlineKeyboardMarkup markupInline = new InlineKeyboardMarkup();
+            List<List<InlineKeyboardButton>> rowsInline = new ArrayList<>();
+
+            Inventory inventory = merchant.getInventory();
+            List<InlineKeyboardButton> rowInline = new ArrayList<>();
+            for (int i = 0; i < inventory.size(); i++) {
+                InlineKeyboardButton button = new InlineKeyboardButton();
+                button.setText(EmojiParser.parseToUnicode(":moneybag: " + (i+1)));
+                button.setCallbackData("pickabuy "+(i+1));
+                rowInline.add(button);
+            }
+            rowsInline.add(rowInline);
+            markupInline.setKeyboard(rowsInline);
+            return markupInline;
+        }
+
+        @Override
+        public String getCommandIdentifier() {
+            return "shop";
+        }
+
+        @Override
+        public String getDescription() {
+            return "exchange treasure for goods";
         }
     }
 

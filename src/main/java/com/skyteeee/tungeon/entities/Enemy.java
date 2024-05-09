@@ -12,19 +12,12 @@ import org.json.JSONObject;
 
 import java.util.List;
 
-public class Enemy extends EntityClass implements Character{
-    private int currentPlaceId;
-    private Inventory inventory;
+public class Enemy extends CharacterClass implements Turnable{
     private int currentArmor = 0;
-    private String title;
     private int weaponIdx = 0;
-    private int level = 1;
     private float mergeChance = 0f;
-
     private static final int INITIAL_HEALTH = 100;
     private float attackChance;
-    private int health;
-
     private boolean usedTurn = false;
 
     public Enemy(int level, World world) {
@@ -32,6 +25,16 @@ public class Enemy extends EntityClass implements Character{
         this.setWorld(world);
         inventory = new Inventory(world);
         health = INITIAL_HEALTH;
+    }
+
+    @Override
+    public void take(int choice) {
+
+    }
+
+    @Override
+    public Item give(int choice) {
+        return null;
     }
 
     public float getMergeChance() {
@@ -43,20 +46,9 @@ public class Enemy extends EntityClass implements Character{
     }
 
     @Override
-    public void setCurrentPlace(int id) {
-
-        currentPlaceId = id;
-    }
-
-    @Override
     public void setCurrentPlace(Place place) {
         place.addEnemy(this);
         currentPlaceId = place.getId();
-    }
-
-    @Override
-    public Place getCurrentPlace() {
-        return (Place) getWorld().getStorage().getEntity(currentPlaceId);
     }
 
     public Armor getArmor() {
@@ -84,33 +76,8 @@ public class Enemy extends EntityClass implements Character{
         return attackChance;
     }
 
-    @Override
-    public Inventory getInventory() {
-        return inventory;
-    }
-
     public Weapon getCurrentWeapon() {
         return (Weapon) getInventory().getItem(weaponIdx);
-    }
-
-    @Override
-    public void take(int choice) {
-
-    }
-
-    @Override
-    public Item give(int choice) {
-        return null;
-    }
-
-    @Override
-    public void setLevel(int level) {
-        this.level = level;
-    }
-
-    @Override
-    public int getLevel() {
-        return level;
     }
 
     public void printState() {
@@ -148,7 +115,7 @@ public class Enemy extends EntityClass implements Character{
         health -= damage;
         weapon.applyDamage(weapon.getDamage());
         getWorld().getUi().slowPrint("Dealt " + damage + " damage. ");
-        if (!checkDeath()) {
+        if (!checkDeath(attacker)) {
             getWorld().getUi().slowPrint(getTitle() + " has survived your attack. It has " + health + " health remaining. \n");
             int currentTurn = getWorld().getStorage().getTurn();
             attack(attacker, getCurrentWeapon());
@@ -176,6 +143,7 @@ public class Enemy extends EntityClass implements Character{
         }
     }
 
+    @Override
     public void onTurn() {
         if (!usedTurn) {
             Place currentPlace = getCurrentPlace();
@@ -246,7 +214,7 @@ public class Enemy extends EntityClass implements Character{
         return EntityFactory.rnd.nextFloat() < attackChance;
     }
 
-    private boolean checkDeath() {
+    private boolean checkDeath(Character attacker) {
         if (health <= 0) {
             getWorld().getUi().println("KILLED: " + title);
             inventory.dropAll(getCurrentPlace());
@@ -254,30 +222,15 @@ public class Enemy extends EntityClass implements Character{
             getArmor().drop(place);
             place.removeEnemy(this);
             getWorld().getStorage().removeEntity(this);
+            getWorld().getFactory().scatterEnemies(Math.max(1, getLevel() - attacker.getLevel()), attacker.getLevel(), place);
             return true;
         }
         return false;
     }
 
     @Override
-    public int getHealth() {
-        return health;
-    }
-
-    @Override
-    public void setHealth(int health) {
-        this.health = health;
-    }
-
-    @Override
     public JSONObject serialize() {
-        JSONObject object = new JSONObject();
-        object.put("id", getId());
-        object.put("title", getTitle());
-        object.put("inventory", inventory.serialize());
-        object.put("currentPlace", currentPlaceId);
-        object.put("health", getHealth());
-        object.put("level", getLevel());
+        JSONObject object = super.serialize();
         object.put("armor", getArmorId());
         object.put("attackChance", getAttackChance());
         object.put("mergeChance", getMergeChance());
@@ -286,13 +239,8 @@ public class Enemy extends EntityClass implements Character{
 
     @Override
     public void deserialize(JSONObject object) {
-        setId(object.getInt("id"));
-        setTitle(object.getString("title"));
-        setCurrentPlace(object.getInt("currentPlace"));
+        super.deserialize(object);
         setArmor(object.optInt("armor", 0));
-        inventory.deserialize(object.getJSONObject("inventory"));
-        setHealth(object.optInt("health", getHealth()));
-        setLevel(object.optInt("level", 1));
         setAttackChance(object.optFloat("attackChance", 0f));
         setMergeChance(object.optFloat("mergeChance", 0f));
     }

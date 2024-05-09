@@ -2,8 +2,7 @@ package com.skyteeee.tungeon.utils;
 
 import com.skyteeee.tungeon.World;
 import com.skyteeee.tungeon.entities.*;
-import com.skyteeee.tungeon.entities.items.Armor;
-import com.skyteeee.tungeon.entities.items.Weapon;
+import com.skyteeee.tungeon.entities.items.*;
 import com.skyteeee.tungeon.storage.Storage;
 
 import java.util.Arrays;
@@ -15,7 +14,43 @@ public class EntityFactory {
     private static final float DAMAGE_CONSTANT = 0.112f;
     private static final float DEFENCE_CONSTANT = 0.07912f;
     private static final float ABSORPTION_CONSTANT = 0.0791f;
+    private static final float MIN_ABSORPTION = 0.2f;
     private static final float ENEMY_HEALTH_CONSTANT = 0.1f;
+
+    static String[] merchantNames = new String[] {
+            "Eren",
+            "David",
+            "Michael",
+            "Joshua",
+            "Elijah",
+            "Dan",
+            "Natasha",
+            "Lord Voldemort",
+            "Leo the King",
+            "Stella",
+            "Sophia",
+            "Mary",
+            "Miranda",
+            "Judy",
+            "Bethany",
+            "Gretta"
+    };
+
+    static String[] merchantFeats = new String[] {
+            "greatest",
+            "strongest",
+            "wise",
+            "courageous",
+            "conqueror",
+            "fair",
+            "greedy",
+            "beautiful",
+            "fool",
+            "trickster",
+            "smart",
+            "witty"
+    };
+
     static String[] colors = new String[] {
             "black",
             "white",
@@ -136,6 +171,29 @@ public class EntityFactory {
             "banana"
     };
 
+    static public class TreasureType {
+        public String name;
+        public int price;
+        public TreasureType(String name, int price) {
+            this.name = name;
+            this.price = price;
+        }
+    }
+
+
+    static TreasureType[] treasureTypes = new TreasureType[] {
+            new TreasureType("Gold :money_face:", 1),
+            new TreasureType("Diamond :gem:", 10),
+            new TreasureType("Ruby :rotating_light:", 5)
+    };
+
+    public static TreasureType getTreasureType(String name) {
+        for (TreasureType type : treasureTypes) {
+            if (type.name.equals(name)) return type;
+        }
+        return null;
+    }
+
     static EnemyAbility[] enemyDescriptors = new EnemyAbility[] {
             new EnemyAbility("grumpy", 0, 0, 0.6f),
             new EnemyAbility("sad", 0, 0, 0.2f),
@@ -197,7 +255,7 @@ public class EntityFactory {
                     label + " " + target.label,
                     healthRange[0] + target.healthRange[0],
                     healthRange[1] + target.healthRange[1],
-                    attackChance * target.attackChance);
+                    attackChance * target.attackChance * 0.7f);
         }
 
         int getHealth(int level) {
@@ -234,7 +292,7 @@ public class EntityFactory {
 
         float getAbsorption(Random rnd, int level) {
             float initAbs = rnd.nextFloat(absorptionRange[0], absorptionRange[1]);
-            return initAbs - (initAbs * level * ABSORPTION_CONSTANT);
+            return Math.max(initAbs - (initAbs * level * ABSORPTION_CONSTANT), MIN_ABSORPTION);
         }
 
         float getDurability(int level) {
@@ -314,6 +372,10 @@ public class EntityFactory {
     private static final int WEAPON_CHANCE = 50;
     private static final int ENEMY_CHANCE = 80;
     private static final int ARMOR_CHANCE = 40;
+    private static final int TREASURE_CHANCE = 70;
+    private static final int MERCHANT_CHANCE = 50;
+
+    private static final int ENEMY_TREASURE_CHANCE = 90;
 
     public EntityFactory(World world) {
         this.world = world;
@@ -382,6 +444,34 @@ public class EntityFactory {
         return a;
     }
 
+    public Merchant createMerchant() {
+        Merchant guy = newMerchant();
+        storage.addNewEntity(guy);
+        String name = merchantNames[rnd.nextInt(merchantNames.length)];
+        String feat = merchantFeats[rnd.nextInt(merchantFeats.length)];
+        guy.setTitle(name + " the " + feat);
+        Merchant.Skill[] skills = Merchant.Skill.values();
+        guy.setSkill(skills[rnd.nextInt(skills.length)]);
+        return guy;
+    }
+
+    public Merchant newMerchant() {
+        return new Merchant(world);
+    }
+
+    public Sellable createSellable(Item toSell) {
+        Sellable sellable = newSellable();
+        storage.addNewEntity(sellable);
+        sellable.setItemId(toSell.getId());
+        return sellable;
+    }
+
+    public Sellable newSellable() {
+        Sellable s = new Sellable();
+        s.setWorld(world);
+        return s;
+    }
+
 
     public Place createPlace (World world) {
         Place place = newPlace();
@@ -407,6 +497,16 @@ public class EntityFactory {
             }
         }
 
+        if (rnd.nextInt(100) < TREASURE_CHANCE) {
+            Treasure treasure = createTreasure(rnd.nextInt(5,10));
+            place.getInventory().addItem(treasure);
+        }
+
+        if (rnd.nextInt(100) < MERCHANT_CHANCE) {
+            Merchant merchant = createMerchant();
+            merchant.setCurrentPlace(place);
+        }
+
         return place;
     }
 
@@ -429,6 +529,9 @@ public class EntityFactory {
         enemy.setAttackChance(ability.attackChance);
         enemy.setMergeChance(rnd.nextFloat(0.01f, 0.1f));
         enemy.getInventory().addItem(createWeapon(level));
+        if (rnd.nextInt(100) < ENEMY_TREASURE_CHANCE) {
+            enemy.getInventory().addItem(createTreasure(rnd.nextInt(1,5)));
+        }
         enemy.setArmor(createArmor(level));
         return enemy;
     }
@@ -501,7 +604,8 @@ public class EntityFactory {
         newArmor.setTitle(oldArmor.getTitle(true));
         int newDefence = (int)((1 + newLevel * DEFENCE_CONSTANT) / (1 + oldArmor.getLevel() * DEFENCE_CONSTANT) * oldArmor.getDefence());
         newArmor.setDefence(newDefence);
-        float newAbsorption = (1 + newLevel * ABSORPTION_CONSTANT) / (1 + oldArmor.getLevel() * ABSORPTION_CONSTANT) * oldArmor.getAbsorption();
+        float newAbsorption = (1 - newLevel * ABSORPTION_CONSTANT) / (1 - oldArmor.getLevel() * ABSORPTION_CONSTANT) * oldArmor.getAbsorption();
+        newAbsorption = Math.max(newAbsorption, MIN_ABSORPTION);
         newArmor.setAbsorption(newAbsorption);
         newArmor.setDurability(oldArmor.getDurability());
         newArmor.setResistance(oldArmor.getResistance());
@@ -526,6 +630,30 @@ public class EntityFactory {
     public Enemy newEnemy(int level) {
         Enemy e =new Enemy(level, world);
         return e;
+    }
+
+
+    public Treasure createTreasure(int amount) {
+        Treasure treasure = newTreasure();
+        storage.addNewEntity(treasure);
+        treasure.setAmount(amount);
+        treasure.setDropChance(0.5f + rnd.nextFloat(0.5f));
+        treasure.setTitle(treasureTypes[rnd.nextInt(treasureTypes.length)].name);
+        return treasure;
+    }
+
+    public void scatterTreasure(int amount, Place exclude) {
+        List<Place> places = storage.getAllOfType(Place.class);
+        places.remove(exclude);
+        for (int i = 0; i < amount; i++) {
+            Treasure treasure = createTreasure(rnd.nextInt(5,10));
+            Place place = places.get(rnd.nextInt(places.size()));
+            place.take(treasure);
+        }
+    }
+
+    public Treasure newTreasure() {
+        return new Treasure();
     }
 
     public Path createPath() {

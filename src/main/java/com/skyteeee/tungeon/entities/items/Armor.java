@@ -6,7 +6,7 @@ import com.skyteeee.tungeon.utils.EntityFactory;
 import com.skyteeee.tungeon.utils.UserInterface;
 import org.json.JSONObject;
 
-public class Armor extends EntityClass implements Item {
+public class Armor extends EntityClass implements Breakable {
 
     private String title;
     private float dropChance;
@@ -94,6 +94,7 @@ public class Armor extends EntityClass implements Item {
         this.defence = defence;
     }
 
+    //during attack, damage is multiplied by raw absorption. simple absorption (inverted) is how much is ACTUALLY being ABSORBED. sorry.
     public float getAbsorption() {
         return getAbsorption(false);
     }
