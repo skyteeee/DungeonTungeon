@@ -14,6 +14,7 @@ public class EntityFactory {
     private static final float DAMAGE_CONSTANT = 0.112f;
     private static final float DEFENCE_CONSTANT = 0.07912f;
     private static final float ABSORPTION_CONSTANT = 0.0791f;
+    private static final float MIN_ABSORPTION = 0.2f;
     private static final float ENEMY_HEALTH_CONSTANT = 0.1f;
 
     static String[] merchantNames = new String[] {
@@ -254,7 +255,7 @@ public class EntityFactory {
                     label + " " + target.label,
                     healthRange[0] + target.healthRange[0],
                     healthRange[1] + target.healthRange[1],
-                    attackChance * target.attackChance);
+                    attackChance * target.attackChance * 0.7f);
         }
 
         int getHealth(int level) {
@@ -291,7 +292,7 @@ public class EntityFactory {
 
         float getAbsorption(Random rnd, int level) {
             float initAbs = rnd.nextFloat(absorptionRange[0], absorptionRange[1]);
-            return initAbs - (initAbs * level * ABSORPTION_CONSTANT);
+            return Math.max(initAbs - (initAbs * level * ABSORPTION_CONSTANT), MIN_ABSORPTION);
         }
 
         float getDurability(int level) {
@@ -371,8 +372,8 @@ public class EntityFactory {
     private static final int WEAPON_CHANCE = 50;
     private static final int ENEMY_CHANCE = 80;
     private static final int ARMOR_CHANCE = 40;
-    private static final int TREASURE_CHANCE = 90;
-    private static final int MERCHANT_CHANCE = 90;
+    private static final int TREASURE_CHANCE = 70;
+    private static final int MERCHANT_CHANCE = 50;
 
     private static final int ENEMY_TREASURE_CHANCE = 90;
 
@@ -603,7 +604,8 @@ public class EntityFactory {
         newArmor.setTitle(oldArmor.getTitle(true));
         int newDefence = (int)((1 + newLevel * DEFENCE_CONSTANT) / (1 + oldArmor.getLevel() * DEFENCE_CONSTANT) * oldArmor.getDefence());
         newArmor.setDefence(newDefence);
-        float newAbsorption = (1 + newLevel * ABSORPTION_CONSTANT) / (1 + oldArmor.getLevel() * ABSORPTION_CONSTANT) * oldArmor.getAbsorption();
+        float newAbsorption = (1 - newLevel * ABSORPTION_CONSTANT) / (1 - oldArmor.getLevel() * ABSORPTION_CONSTANT) * oldArmor.getAbsorption();
+        newAbsorption = Math.max(newAbsorption, MIN_ABSORPTION);
         newArmor.setAbsorption(newAbsorption);
         newArmor.setDurability(oldArmor.getDurability());
         newArmor.setResistance(oldArmor.getResistance());
@@ -638,6 +640,16 @@ public class EntityFactory {
         treasure.setDropChance(0.5f + rnd.nextFloat(0.5f));
         treasure.setTitle(treasureTypes[rnd.nextInt(treasureTypes.length)].name);
         return treasure;
+    }
+
+    public void scatterTreasure(int amount, Place exclude) {
+        List<Place> places = storage.getAllOfType(Place.class);
+        places.remove(exclude);
+        for (int i = 0; i < amount; i++) {
+            Treasure treasure = createTreasure(rnd.nextInt(5,10));
+            Place place = places.get(rnd.nextInt(places.size()));
+            place.take(treasure);
+        }
     }
 
     public Treasure newTreasure() {

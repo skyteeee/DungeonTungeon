@@ -83,6 +83,7 @@ public class World implements GameObject, Savable {
                 turnable.onTurn();
             }
         }
+        factory.scatterTreasure(1, player.getCurrentPlace());
         instance.nextTurn();
     }
 

@@ -115,7 +115,7 @@ public class Enemy extends CharacterClass implements Turnable{
         health -= damage;
         weapon.applyDamage(weapon.getDamage());
         getWorld().getUi().slowPrint("Dealt " + damage + " damage. ");
-        if (!checkDeath()) {
+        if (!checkDeath(attacker)) {
             getWorld().getUi().slowPrint(getTitle() + " has survived your attack. It has " + health + " health remaining. \n");
             int currentTurn = getWorld().getStorage().getTurn();
             attack(attacker, getCurrentWeapon());
@@ -214,7 +214,7 @@ public class Enemy extends CharacterClass implements Turnable{
         return EntityFactory.rnd.nextFloat() < attackChance;
     }
 
-    private boolean checkDeath() {
+    private boolean checkDeath(Character attacker) {
         if (health <= 0) {
             getWorld().getUi().println("KILLED: " + title);
             inventory.dropAll(getCurrentPlace());
@@ -222,6 +222,7 @@ public class Enemy extends CharacterClass implements Turnable{
             getArmor().drop(place);
             place.removeEnemy(this);
             getWorld().getStorage().removeEntity(this);
+            getWorld().getFactory().scatterEnemies(Math.max(1, getLevel() - attacker.getLevel()), attacker.getLevel(), place);
             return true;
         }
         return false;

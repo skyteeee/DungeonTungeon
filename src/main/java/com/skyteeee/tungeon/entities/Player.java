@@ -84,9 +84,9 @@ public class Player extends EntityClass implements Character, Turnable {
         for (int i = 0; i < inventory.size(); i++) {
             Item item1 = inventory.getItem(i);
             if (item1 instanceof Treasure treasure) {
-                if (treasure.getTitle().startsWith("Gold")) gold = treasure;
-                if (treasure.getTitle().startsWith("Ruby")) ruby = treasure;
-                if (treasure.getTitle().startsWith("Diamond")) diamond = treasure;
+                if (treasure.getTitle().startsWith(Merchant.Skill.REPAIR.moneyType)) gold = treasure;
+                if (treasure.getTitle().startsWith(Merchant.Skill.ARMOR.moneyType)) ruby = treasure;
+                if (treasure.getTitle().startsWith(Merchant.Skill.WEAPON.moneyType)) diamond = treasure;
 
             }
         }
@@ -136,6 +136,15 @@ public class Player extends EntityClass implements Character, Turnable {
                 break;
             }
         }
+    }
+
+    public int getMoneyOfSkill(Merchant.Skill skill) {
+        for (int i = 0; i < inventory.size(); i++) {
+            Item item = inventory.getItem(i);
+            if (item instanceof Treasure treasure && treasure.getTitle().startsWith(skill.moneyType))
+                return treasure.getAmount();
+        }
+        return 0;
     }
 
     public void take(Item item) {

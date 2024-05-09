@@ -16,7 +16,14 @@ public class Merchant extends CharacterClass implements Turnable{
     int shopCycle;
 
     public enum Skill {
-        REPAIR, ARMOR, WEAPON
+        REPAIR ("Gold"),
+        ARMOR ("Ruby"),
+        WEAPON ("Diamond");
+
+        public final String moneyType;
+        private Skill(String moneyType) {
+            this.moneyType = moneyType;
+        }
     }
 
     private Skill skill = Skill.ARMOR;
@@ -71,6 +78,8 @@ public class Merchant extends CharacterClass implements Turnable{
             populateShop();
         }
         inventory.printState(false);
+        world.getUi().println();
+        world.getUi().println("You have " + world.getPlayer().getMoneyOfSkill(skill) + " " + skill.moneyType);
 
     }
 
